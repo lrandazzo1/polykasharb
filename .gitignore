@@ -1,0 +1,23 @@
+# Python / virtualenv
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Secrets: API keys live only in .env (see .env.example)
+.env
+*.pem
+*.key
+
+# Runtime state written by the scanner (per-machine, may reflect your positions)
+matches_cache.json
+matches_cache.mock.json
+trades.json
+trades.mock.json
+execution_state.json
+execution_state.mock.json
+*.tmp
+scanner.pid
+scanner.mock.pid
+*.log
+*.log.*

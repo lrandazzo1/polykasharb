@@ -1,0 +1,114 @@
+[
+  {
+    "kalshi_ticker": "KXFEDDECISION-26DEC-H0",
+    "poly_condition_id": "0xacccbe25c8317c92f71cdf7be1d92de9a6f531f644344d4651412e40e4ffc862",
+    "kalshi_yes_equals_outcome": 0,
+    "confidence": 0.96,
+    "reason": "Both: no rate change at Dec 2026 FOMC"
+  },
+  {
+    "kalshi_ticker": "KXNBAGAME-26NOV20LALBOS-LAL",
+    "poly_condition_id": "0x6f756ace27c7bb4fd8317b981af9de1625cf7983791079280c777dc9c906ec9d",
+    "kalshi_yes_equals_outcome": 1,
+    "confidence": 0.97,
+    "reason": "Same Nov 20 game; Kalshi YES = Lakers win"
+  },
+  {
+    "kalshi_ticker": "KXRECSSNBER-26",
+    "poly_condition_id": "0x7b388925d8f54e2dd7db73ad191d95c1c9395d964a6a0d7f72d269deaf990fea",
+    "kalshi_yes_equals_outcome": 0,
+    "confidence": 0.93,
+    "reason": "Both NBER recession starting in 2026"
+  },
+  {
+    "kalshi_ticker": "KXOSCARPIC-27-ODY",
+    "poly_condition_id": "0x1a185ad3a65a9b00bba40c87c49fe517788f77dc903caef1fbf480806c892c95",
+    "kalshi_yes_equals_outcome": 0,
+    "confidence": 0.95,
+    "reason": "Same film, same 2027 Best Picture"
+  },
+  {
+    "kalshi_ticker": "KXPRESPARTY-2028-D",
+    "poly_condition_id": "0x88608edc35f4f9efe40b6e3a4c348761ce1d2d0c88b718d89d6f80128e935e15",
+    "kalshi_yes_equals_outcome": 0,
+    "confidence": 0.94,
+    "reason": "Democrat wins 2028 presidency on both"
+  },
+  {
+    "kalshi_ticker": "KXBTCD-26DEC31-T119999.99",
+    "poly_condition_id": null,
+    "kalshi_yes_equals_outcome": null,
+    "confidence": 0.97,
+    "reason": "Different strike (120k vs 130k) and 'on' vs 'by'"
+  },
+  {
+    "kalshi_ticker": "KXFEDDECISION-27JAN-C25",
+    "poly_condition_id": "0x80d8700b33b49d07ced76db4691e6078f459ebc2fd3c66565b4bb69746b6f81d",
+    "kalshi_yes_equals_outcome": 0,
+    "confidence": 0.92,
+    "reason": "Same proposition and deadline"
+  },
+  {
+    "kalshi_ticker": "KXSWIFTKELCE-26",
+    "poly_condition_id": "0x0822c11e4bebe5419f5c3e5ae3a159ea7ac172cd20199a98f34e3405f4af0c37",
+    "kalshi_yes_equals_outcome": 0,
+    "confidence": 0.92,
+    "reason": "Same proposition and deadline"
+  },
+  {
+    "kalshi_ticker": "KXSTARSHIPORBIT-26",
+    "poly_condition_id": "0xf8245a528cd0bdb0369fdde0dc1596bea45fec423bb4963dac1d532c6582ba1e",
+    "kalshi_yes_equals_outcome": 0,
+    "confidence": 0.92,
+    "reason": "Same proposition and deadline"
+  },
+  {
+    "kalshi_ticker": "KXGOVSHUT-26",
+    "poly_condition_id": "0x418d3179447c68cd44b1d0fcd3da5e42e8d678139f5430ea1673d190df100a3f",
+    "kalshi_yes_equals_outcome": 0,
+    "confidence": 0.92,
+    "reason": "Same proposition and deadline"
+  },
+  {
+    "kalshi_ticker": "KXTIMEPOY-26-MUSK",
+    "poly_condition_id": "0xc8de0d477372dc806537a95ad2ee749e4ba034b0eeb317762a13388b7a5640d7",
+    "kalshi_yes_equals_outcome": 0,
+    "confidence": 0.92,
+    "reason": "Same proposition and deadline"
+  },
+  {
+    "kalshi_ticker": "KXAPPLEFOLD-26",
+    "poly_condition_id": "0xfa81f5334082683c60a02277c1c430f579a07c74d7d52f07fd953dd07a8a143b",
+    "kalshi_yes_equals_outcome": 0,
+    "confidence": 0.92,
+    "reason": "Same proposition and deadline"
+  },
+  {
+    "kalshi_ticker": "KXBTCMAXY-26-150000",
+    "poly_condition_id": "0x64ce7900b7874f12508917e22ff489651e8add16867ab408ad58a288cbbef00e",
+    "kalshi_yes_equals_outcome": 0,
+    "confidence": 0.92,
+    "reason": "Same proposition and deadline"
+  },
+  {
+    "kalshi_ticker": "KXGPT6-26",
+    "poly_condition_id": "0x13d21348f302c973c27f4728805cfa23b178bcc0d6572d53b660b2b17f348ec5",
+    "kalshi_yes_equals_outcome": 0,
+    "confidence": 0.92,
+    "reason": "Same proposition and deadline"
+  },
+  {
+    "kalshi_ticker": "KXZELENSKYPUTIN-26",
+    "poly_condition_id": "0x552146c07ae5e8acece6394f768eeb6e051a6e6d5bf0c965774f65f4771d7393",
+    "kalshi_yes_equals_outcome": 0,
+    "confidence": 0.92,
+    "reason": "Same proposition and deadline"
+  },
+  {
+    "kalshi_ticker": "KXSB-27-KC",
+    "poly_condition_id": "0x529a718ef7751a1022c9345bae07fc4d6db11e983bd2481698867fb82df58845",
+    "kalshi_yes_equals_outcome": 0,
+    "confidence": 0.92,
+    "reason": "Same proposition and deadline"
+  }
+]

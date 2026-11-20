@@ -1,0 +1,631 @@
+[
+  {
+    "id": "2400000",
+    "question": "No change in Fed interest rates after December 2026 meeting?",
+    "conditionId": "0xacccbe25c8317c92f71cdf7be1d92de9a6f531f644344d4651412e40e4ffc862",
+    "slug": "no-change-in-fed-interest-rates-after-december-2026-meeting",
+    "endDate": "2026-12-09T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if the upper bound of the target federal funds range is unchanged following the Federal Reserve's FOMC meeting scheduled for December 8-9, 2026. Otherwise \"No\".",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.640\", \"0.335\"]",
+    "clobTokenIds": "[\"67354777492969878321364519028941648168550528124697692439290179668636874543185\", \"41152550440713937954400833831657985251590374080354631996413091363173381751990\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.665,
+    "bestAsk": 0.64,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "no-change-in-fed-interest-rates-after-december-2026-meeting",
+        "title": "No change in Fed interest rates after December 2026 meeting?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.05,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400001",
+    "question": "Lakers vs. Celtics",
+    "conditionId": "0x6f756ace27c7bb4fd8317b981af9de1625cf7983791079280c777dc9c906ec9d",
+    "slug": "nba-lal-bos-2026-11-20",
+    "endDate": "2026-11-21T00:30:00Z",
+    "description": "In the upcoming NBA game, scheduled for November 20, 2026 at 7:30 PM ET: If the Los Angeles Lakers win, the market will resolve to \"Lakers\". If the Boston Celtics win, the market will resolve to \"Celtics\".",
+    "outcomes": "[\"Celtics\", \"Lakers\"]",
+    "outcomePrices": "[\"0.610\", \"0.370\"]",
+    "clobTokenIds": "[\"10169041356743696184308173556424340950243024076485543526229870345769363743548\", \"25682203036124016727938030648376429709820233217069991391227369987201355227625\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.63,
+    "bestAsk": 0.61,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "nba-lal-bos-2026-11-20",
+        "title": "Lakers vs. Celtics"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.05,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400002",
+    "question": "US recession in 2026?",
+    "conditionId": "0x7b388925d8f54e2dd7db73ad191d95c1c9395d964a6a0d7f72d269deaf990fea",
+    "slug": "us-recession-in-2026",
+    "endDate": "2027-06-30T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if the NBER announces that a US recession began at any point in 2026. Otherwise \"No\".",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.055\", \"0.950\"]",
+    "clobTokenIds": "[\"10298606135697959090573736047392055257154539429415841437849755863276930433937\", \"91134096539548873590611536620068011161903766069108629223507417501224578533668\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.05,
+    "bestAsk": 0.055,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "us-recession-in-2026",
+        "title": "US recession in 2026?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.05,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400003",
+    "question": "Will 'The Odyssey' win Best Picture at the 2027 Oscars?",
+    "conditionId": "0x1a185ad3a65a9b00bba40c87c49fe517788f77dc903caef1fbf480806c892c95",
+    "slug": "will-the-odyssey-win-best-picture-at-the-2027-oscars",
+    "endDate": "2027-03-14T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if The Odyssey wins Best Picture at the 99th Academy Awards ceremony in 2027.",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.230\", \"0.740\"]",
+    "clobTokenIds": "[\"92816285032491475308543018176413511451241670690939546626430566736519741052698\", \"77305044351055575675155387958328119094289352420001719948210079222081735036994\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.26,
+    "bestAsk": 0.23,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "will-the-odyssey-win-best-picture-at-the-2027-oscars",
+        "title": "Will 'The Odyssey' win Best Picture at the 2027 Oscars?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.05,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400004",
+    "question": "Will the Democratic Party win the 2028 US Presidential Election?",
+    "conditionId": "0x88608edc35f4f9efe40b6e3a4c348761ce1d2d0c88b718d89d6f80128e935e15",
+    "slug": "will-the-democratic-party-win-the-2028-us-presidential-election",
+    "endDate": "2028-11-07T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if the Democratic Party's nominee wins the 2028 US presidential election.",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.530\", \"0.480\"]",
+    "clobTokenIds": "[\"11484273250892700970589036972338036817325388537716142750376673697536361515145\", \"10998218516765826552520088024986364107022426086349831748008124295516971515421\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.52,
+    "bestAsk": 0.53,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "will-the-democratic-party-win-the-2028-us-presidential-election",
+        "title": "Will the Democratic Party win the 2028 US Presidential Election?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.04,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400005",
+    "question": "Will Bitcoin reach $130,000 by December 31, 2026?",
+    "conditionId": "0x29d91425957cd3f751bc6d752fe52acf3ebbe9cd8c50b66dd557c6edb60c8649",
+    "slug": "will-bitcoin-reach-130000-by-december-31-2026",
+    "endDate": "2026-12-31T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if any Binance 1-minute candle for BTC/USDT between now and December 31, 2026 11:59 PM ET has a final High price of $130,000 or higher.",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.380\", \"0.600\"]",
+    "clobTokenIds": "[\"58913238699521068227085186742217867210997592558477861014217121952769416704415\", \"11090351346347851107693771081319187984101822139683104488605732988509766304651\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.4,
+    "bestAsk": 0.38,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "will-bitcoin-reach-130000-by-december-31-2026",
+        "title": "Will Bitcoin reach $130,000 by December 31, 2026?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.07,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400006",
+    "question": "Will Taylor Swift announce a new album before 2027?",
+    "conditionId": "0x946f0db195c61fec41e54e961b848ac15b7403dbe4791451563060429b6bd789",
+    "slug": "will-taylor-swift-announce-a-new-album-before-2027",
+    "endDate": "2026-12-31T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if Taylor Swift officially announces a new studio album before January 1, 2027.",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.220\", \"0.790\"]",
+    "clobTokenIds": "[\"77058885145004032672541753788617328919422320364879752866076206408350035159397\", \"79785621181003631900059608630913601765801306622060329837456150461773511295479\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.21,
+    "bestAsk": 0.22,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "will-taylor-swift-announce-a-new-album-before-2027",
+        "title": "Will Taylor Swift announce a new album before 2027?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.05,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400007",
+    "question": "Fed cuts rates by 25 bps after January 2027 meeting?",
+    "conditionId": "0x80d8700b33b49d07ced76db4691e6078f459ebc2fd3c66565b4bb69746b6f81d",
+    "slug": "fed-cuts-rates-by-25-bps-after-january-2027-meeting",
+    "endDate": "2027-01-27T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if Fed cuts rates by 25 bps after January 2027 meeting. Otherwise \"No\".",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.325\", \"0.665\"]",
+    "clobTokenIds": "[\"60644270753260635305986560938563338725459880736089145104899914543800027872101\", \"11575047910480763077717718705185969405517316245696637468811488233258048562913\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.335,
+    "bestAsk": 0.325,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "fed-cuts-rates-by-25-bps-after-january-2027-meeting",
+        "title": "Fed cuts rates by 25 bps after January 2027 meeting?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.05,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400008",
+    "question": "Taylor Swift and Travis Kelce married in 2026?",
+    "conditionId": "0x0822c11e4bebe5419f5c3e5ae3a159ea7ac172cd20199a98f34e3405f4af0c37",
+    "slug": "taylor-swift-and-travis-kelce-married-in-2026",
+    "endDate": "2026-12-31T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if Taylor Swift and Travis Kelce married in 2026. Otherwise \"No\".",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.215\", \"0.700\"]",
+    "clobTokenIds": "[\"16243231275593285403578988869180362564091778950645067256169398819652457413731\", \"33605476722026295963141746713618654600428644661504715398153426204969135254579\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.3,
+    "bestAsk": 0.215,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "taylor-swift-and-travis-kelce-married-in-2026",
+        "title": "Taylor Swift and Travis Kelce married in 2026?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.05,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400009",
+    "question": "SpaceX Starship reaches orbit before 2027?",
+    "conditionId": "0xf8245a528cd0bdb0369fdde0dc1596bea45fec423bb4963dac1d532c6582ba1e",
+    "slug": "spacex-starship-reaches-orbit-before-2027",
+    "endDate": "2026-12-31T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if SpaceX Starship reaches orbit before 2027. Otherwise \"No\".",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.790\", \"0.205\"]",
+    "clobTokenIds": "[\"69408944729442612695430057077327893999999403850273072961212721297028039532294\", \"18772665390988577605892899726230482732666041433101392264378388803210055766731\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.795,
+    "bestAsk": 0.79,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "spacex-starship-reaches-orbit-before-2027",
+        "title": "SpaceX Starship reaches orbit before 2027?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.05,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400010",
+    "question": "US government shutdown before 2027?",
+    "conditionId": "0x418d3179447c68cd44b1d0fcd3da5e42e8d678139f5430ea1673d190df100a3f",
+    "slug": "us-government-shutdown-before-2027",
+    "endDate": "2026-12-31T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if US government shutdown before 2027. Otherwise \"No\".",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.115\", \"0.885\"]",
+    "clobTokenIds": "[\"91528381259515626007301516064109653558035061947408029490826011888177345823046\", \"10848272575102840626164157344236747563051756848509282360753070684961510585080\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.115,
+    "bestAsk": 0.115,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "us-government-shutdown-before-2027",
+        "title": "US government shutdown before 2027?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.04,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400011",
+    "question": "Will Elon Musk be named Time Person of the Year 2026?",
+    "conditionId": "0xc8de0d477372dc806537a95ad2ee749e4ba034b0eeb317762a13388b7a5640d7",
+    "slug": "will-elon-musk-be-named-time-person-of-the-year-2026",
+    "endDate": "2026-12-10T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if Will Elon Musk be named Time Person of the Year 2026. Otherwise \"No\".",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.085\", \"0.918\"]",
+    "clobTokenIds": "[\"10967365857975739513539185976641635085601906285975098241809941673226052255124\", \"95716881634894608583280792382854575030586255231434780974936768508321760077919\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.082,
+    "bestAsk": 0.085,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "will-elon-musk-be-named-time-person-of-the-year-2026",
+        "title": "Will Elon Musk be named Time Person of the Year 2026?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.05,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400012",
+    "question": "Apple releases foldable iPhone in 2026?",
+    "conditionId": "0xfa81f5334082683c60a02277c1c430f579a07c74d7d52f07fd953dd07a8a143b",
+    "slug": "apple-releases-foldable-iphone-in-2026",
+    "endDate": "2026-12-31T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if Apple releases foldable iPhone in 2026. Otherwise \"No\".",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.395\", \"0.605\"]",
+    "clobTokenIds": "[\"98474625452532937645004980639802827286819589456226113879463144948387812077948\", \"98937358032331611315945127585327598934854379245561464060781420617008701546269\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.395,
+    "bestAsk": 0.395,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "apple-releases-foldable-iphone-in-2026",
+        "title": "Apple releases foldable iPhone in 2026?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.04,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400013",
+    "question": "Will Bitcoin hit $150k in 2026?",
+    "conditionId": "0x64ce7900b7874f12508917e22ff489651e8add16867ab408ad58a288cbbef00e",
+    "slug": "will-bitcoin-hit-150k-in-2026",
+    "endDate": "2026-12-31T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if Will Bitcoin hit $150k in 2026. Otherwise \"No\".",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.062\", \"0.942\"]",
+    "clobTokenIds": "[\"11354039419543178807223097977613502533693496531964014515015606512600213065127\", \"9002871953375418254402449773123012749467692892568696869097230177453856770674\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.058,
+    "bestAsk": 0.062,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "will-bitcoin-hit-150k-in-2026",
+        "title": "Will Bitcoin hit $150k in 2026?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.07,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400014",
+    "question": "OpenAI releases GPT-6 in 2026?",
+    "conditionId": "0x13d21348f302c973c27f4728805cfa23b178bcc0d6572d53b660b2b17f348ec5",
+    "slug": "openai-releases-gpt-6-in-2026",
+    "endDate": "2026-12-31T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if OpenAI releases GPT-6 in 2026. Otherwise \"No\".",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.172\", \"0.832\"]",
+    "clobTokenIds": "[\"97547176280810908844319770832237460423588306492887625241614185206737565924904\", \"77390313419790518466261369460512095106831467533456796229109167113615063543633\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.168,
+    "bestAsk": 0.172,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "openai-releases-gpt-6-in-2026",
+        "title": "OpenAI releases GPT-6 in 2026?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.04,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400015",
+    "question": "Zelensky and Putin meet in person in 2026?",
+    "conditionId": "0x552146c07ae5e8acece6394f768eeb6e051a6e6d5bf0c965774f65f4771d7393",
+    "slug": "zelensky-and-putin-meet-in-person-in-2026",
+    "endDate": "2026-12-31T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if Zelensky and Putin meet in person in 2026. Otherwise \"No\".",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.052\", \"0.952\"]",
+    "clobTokenIds": "[\"36823498915539515899154011804231876453336993037794000519551685367208126680036\", \"74448955441692804197710256298343426482149355357965379087157728580697212449113\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.048,
+    "bestAsk": 0.052,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "zelensky-and-putin-meet-in-person-in-2026",
+        "title": "Zelensky and Putin meet in person in 2026?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": false,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.0,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  },
+  {
+    "id": "2400016",
+    "question": "Will the Chiefs win Super Bowl LXI?",
+    "conditionId": "0x529a718ef7751a1022c9345bae07fc4d6db11e983bd2481698867fb82df58845",
+    "slug": "will-the-chiefs-win-super-bowl-lxi",
+    "endDate": "2027-02-14T00:00:00Z",
+    "description": "This market will resolve to \"Yes\" if Will the Chiefs win Super Bowl LXI. Otherwise \"No\".",
+    "outcomes": "[\"Yes\", \"No\"]",
+    "outcomePrices": "[\"0.104\", \"0.899\"]",
+    "clobTokenIds": "[\"11811928490598494803978456068498365309340267135277034999139197098968806920587\", \"30346077425113737409271221212475692734088137202431592937469794681075047819888\"]",
+    "active": true,
+    "closed": false,
+    "archived": false,
+    "enableOrderBook": true,
+    "acceptingOrders": true,
+    "orderMinSize": 5,
+    "orderPriceMinTickSize": 0.001,
+    "bestBid": 0.101,
+    "bestAsk": 0.104,
+    "negRisk": false,
+    "liquidityNum": 25000.0,
+    "events": [
+      {
+        "slug": "will-the-chiefs-win-super-bowl-lxi",
+        "title": "Will the Chiefs win Super Bowl LXI?"
+      }
+    ],
+    "volume24hr": 180000.0,
+    "feesEnabled": true,
+    "feeType": "category_fees",
+    "feeSchedule": {
+      "exponent": 1,
+      "rate": 0.05,
+      "takerOnly": true,
+      "rebateRate": 0.25
+    }
+  }
+]

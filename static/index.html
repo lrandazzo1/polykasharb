@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arb Scanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+  tailwind.config = {
+    theme: { extend: {
+      fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'ui-monospace', 'monospace'] },
+      colors: { ink: { 950: '#07090d', 900: '#0b0f15', 850: '#10151d', 800: '#151b25', 700: '#1f2733', 600: '#2b3442' } },
+    } },
+  };
+</script>
+<style>
+  body { background: #07090d; }
+  .num { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .pulse-dot { animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1);} 50% { opacity: .35; transform: scale(.8);} }
+  .flash { animation: flash .9s ease-out; }
+  @keyframes flash { from { background-color: rgba(16,185,129,.18);} to { background-color: transparent;} }
+  .drawer { transition: transform .25s ease; }
+  .scrim { transition: opacity .25s ease; }
+  input[type=number]::-webkit-inner-spin-button { opacity: .4; }
+  th[data-sort] { cursor: pointer; user-select: none; }
+  th[data-sort]:hover { color: #e2e8f0; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; } ::-webkit-scrollbar-thumb { background: #1f2733; border-radius: 6px; }
+</style>
+</head>
+<body class="h-full text-slate-300 font-sans antialiased">
+
+<!-- ============================== HEADER ============================== -->
+<header class="sticky top-0 z-30 border-b border-ink-700/70 bg-ink-950/85 backdrop-blur">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 h-14 flex items-center gap-3">
+    <div class="flex items-center gap-2.5">
+      <div class="h-7 w-7 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-500 grid place-items-center text-ink-950 font-bold text-sm">⇄</div>
+      <span class="font-semibold text-slate-100 tracking-tight">Arb Scanner</span>
+      <span class="hidden sm:inline text-slate-500 text-sm">Kalshi × Polymarket</span>
+      <span id="modeBadge" class="hidden ml-1 rounded-md bg-amber-400/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-amber-300 ring-1 ring-amber-400/30">Mock data</span>
+    </div>
+    <div class="ml-auto flex items-center gap-2">
+      <span id="connBadge" class="hidden rounded-md bg-rose-500/15 px-2 py-1 text-xs font-medium text-rose-300 ring-1 ring-rose-500/30">Disconnected</span>
+      <span id="execBadge" class="rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wider ring-1">—</span>
+      <button id="estopBtn" class="hidden rounded-lg bg-rose-600 px-3 py-1.5 text-sm font-bold text-white ring-1 ring-rose-400 hover:bg-rose-500 shadow-lg shadow-rose-900/40">■ Emergency stop</button>
+      <button id="armBtn" class="hidden rounded-lg bg-ink-800 px-3 py-1.5 text-sm font-semibold text-amber-200 ring-1 ring-amber-400/50 hover:bg-ink-700">Enable auto-trade</button>
+      <button id="pauseBtn" class="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 ring-1 ring-ink-600 hover:bg-ink-800 hover:text-white">Pause</button>
+      <button id="openDrawer" class="rounded-lg bg-ink-800 px-3 py-1.5 text-sm font-medium text-slate-200 ring-1 ring-ink-600 hover:bg-ink-700 flex items-center gap-1.5">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"/></svg>
+        Controls
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="mx-auto max-w-7xl px-4 sm:px-6 py-6 space-y-8">
+
+  <!-- ============================== KPI BAR ============================== -->
+  <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="rounded-xl bg-ink-900 ring-1 ring-ink-700/80 p-4">
+      <div class="text-xs font-medium uppercase tracking-wider text-slate-500">Scanner status</div>
+      <div class="mt-2 flex items-center gap-2">
+        <span id="statusBadge" class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1">
+          <span id="statusDot" class="h-1.5 w-1.5 rounded-full pulse-dot"></span><span id="statusText">Connecting…</span>
+        </span>
+      </div>
+      <div class="mt-2 text-sm text-slate-400">Next poll <span id="countdown" class="num text-slate-200">—</span></div>
+      <div class="mt-0.5 text-xs text-slate-500 truncate" id="lastScan">&nbsp;</div>
+      <div class="mt-0.5 text-[11px] text-slate-600 truncate" id="cadence">&nbsp;</div>
+      <div class="mt-1 hidden rounded bg-amber-400/10 px-1.5 py-0.5 text-[11px] text-amber-300 ring-1 ring-amber-400/30" id="throttleNote"></div>
+    </div>
+    <div class="rounded-xl bg-ink-900 ring-1 ring-ink-700/80 p-4">
+      <div class="text-xs font-medium uppercase tracking-wider text-slate-500">Matched pairs active</div>
+      <div id="kpiPairs" class="mt-1.5 num text-3xl font-semibold text-slate-100">—</div>
+      <div id="kpiPairsSub" class="mt-1 text-xs text-slate-500 truncate">&nbsp;</div>
+    </div>
+    <div class="rounded-xl bg-ink-900 ring-1 ring-ink-700/80 p-4" id="kpiArbsCard">
+      <div class="text-xs font-medium uppercase tracking-wider text-slate-500">Live arbitrage · bulletproof</div>
+      <div id="kpiArbs" class="mt-1.5 num text-3xl font-semibold text-slate-100">—</div>
+      <div id="kpiArbsSub" class="mt-1 text-xs text-slate-500 truncate">&nbsp;</div>
+    </div>
+    <div class="rounded-xl bg-ink-900 ring-1 ring-ink-700/80 p-4">
+      <label for="capital" class="text-xs font-medium uppercase tracking-wider text-slate-500">Cap per platform</label>
+      <div class="mt-1.5 flex items-center rounded-lg bg-ink-950 ring-1 ring-ink-600 focus-within:ring-emerald-500/70">
+        <span class="pl-3 text-slate-500 num text-lg">$</span>
+        <input id="capital" type="number" min="0" step="5" inputmode="decimal"
+               class="w-full bg-transparent px-2 py-1.5 num text-2xl font-semibold text-slate-100 outline-none">
+      </div>
+      <div id="capitalHint" class="mt-1 text-xs text-slate-500">Max exposure on Kalshi and on Polymarket</div>
+    </div>
+  </section>
+
+  <div id="errorBar" class="hidden rounded-lg bg-rose-500/10 px-4 py-2.5 text-sm text-rose-200 ring-1 ring-rose-500/30"></div>
+  <div id="haltBar" class="hidden rounded-lg bg-rose-500/15 px-4 py-3 text-sm text-rose-100 ring-1 ring-rose-500/50"></div>
+
+  <!-- ============================== ACCOUNTS ============================== -->
+  <section>
+    <div class="mb-3 flex items-end justify-between gap-4">
+      <div>
+        <h2 class="text-lg font-semibold text-slate-100 flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-cyan-400"></span>Accounts &amp; execution</h2>
+        <p class="text-sm text-slate-500">Each leg is sized to the smaller of the per-platform cap left and your live cash balance.</p>
+      </div>
+    </div>
+    <div class="grid gap-3 md:grid-cols-3">
+      <div id="acctKalshi" class="rounded-xl bg-ink-900 ring-1 ring-ink-700/80 p-4"></div>
+      <div id="acctPoly" class="rounded-xl bg-ink-900 ring-1 ring-ink-700/80 p-4"></div>
+      <div id="acctExec" class="rounded-xl bg-ink-900 ring-1 ring-ink-700/80 p-4"></div>
+    </div>
+  </section>
+
+  <!-- ============================== ARBS ============================== -->
+  <section>
+    <div class="flex items-end justify-between gap-4 mb-3">
+      <div>
+        <h2 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-emerald-400"></span>Live arbitrage <span class="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-200 ring-1 ring-emerald-500/40">bulletproof</span>
+        </h2>
+        <p class="text-sm text-slate-500" id="strictCriteria">Equal contracts on both legs, priced at the VWAP of the full fill, fees included. Only pairs passing every strict check appear here.</p>
+      </div>
+      <div class="flex items-center gap-1 text-xs" id="arbSort">
+        <span class="mr-1 text-slate-500">Sort</span>
+        <button data-arbsort="roi_pct" class="rounded-md px-2 py-1 font-medium ring-1">Net ROI</button>
+        <button data-arbsort="annualized_roi" class="rounded-md px-2 py-1 font-medium ring-1">Annualized</button>
+        <button data-arbsort="profit" class="rounded-md px-2 py-1 font-medium ring-1">Profit</button>
+        <button data-arbsort="days_to_settle" class="rounded-md px-2 py-1 font-medium ring-1">Lock-up</button>
+      </div>
+    </div>
+    <div id="arbList" class="space-y-3"></div>
+  </section>
+
+  <!-- ============================== NEAR ARBS ============================== -->
+  <section>
+    <div class="mb-3">
+      <h2 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+        <span class="h-2 w-2 rounded-full bg-amber-400"></span>Watchlist / rule-risk spreads <span class="text-slate-500 font-normal text-sm" id="watchCount"></span>
+      </h2>
+      <p class="text-sm text-slate-500">Everything that fails at least one strict check, with every reason listed. <span class="text-amber-300">ARB</span> = clears the annualized and net ROI targets but fails a strict check. Sorted by annualized ROI; click a column to re-sort.</p>
+    </div>
+    <div class="overflow-x-auto rounded-xl ring-1 ring-ink-700/80 bg-ink-900">
+      <table class="min-w-full text-sm">
+        <thead class="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-ink-700">
+          <tr>
+            <th class="px-4 py-3 font-medium" data-sort="event">Event</th>
+            <th class="px-3 py-3 font-medium" data-sort="category">Category</th>
+            <th class="px-3 py-3 font-medium text-right" data-sort="kalshi_top_price">Kalshi</th>
+            <th class="px-3 py-3 font-medium text-right" data-sort="poly_top_price">Polymarket</th>
+            <th class="px-3 py-3 font-medium text-right" data-sort="cost_per_dollar">Cost / $1 (fees)</th>
+            <th class="px-3 py-3 font-medium text-right" data-sort="net_roi">Net ROI</th>
+            <th class="px-3 py-3 font-medium text-right" data-sort="annualized_roi" title="Net ROI × 365 / days until the later of the two settlement dates (simple, not compounded)">Annualized ROI</th>
+            <th class="px-3 py-3 font-medium" data-sort="reject_reason">Why not an arb</th>
+            <th class="px-3 py-3"></th>
+          </tr>
+        </thead>
+        <tbody id="nearBody" class="divide-y divide-ink-700/60"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============================== TRADES ============================== -->
+  <section>
+    <div class="mb-3 flex items-end justify-between gap-4">
+      <div>
+        <h2 class="text-lg font-semibold text-slate-100 flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-violet-400"></span>Trade history <span id="tradeCount" class="text-slate-500 font-normal text-sm"></span></h2>
+        <p class="text-sm text-slate-500">Live and simulated (dry-run) trades. Saved in trades.json and logged to scanner.log.</p>
+      </div>
+      <button id="resetSimBtn" class="hidden rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-400 ring-1 ring-ink-600 hover:bg-ink-800 hover:text-white">Clear simulated trades</button>
+    </div>
+    <div class="overflow-x-auto rounded-xl ring-1 ring-ink-700/80 bg-ink-900">
+      <table class="min-w-full text-sm">
+        <thead class="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-ink-700">
+          <tr><th class="px-4 py-3 font-medium">Time</th><th class="px-3 py-3 font-medium">Event</th><th class="px-3 py-3 font-medium">Kalshi leg</th><th class="px-3 py-3 font-medium">Polymarket leg</th><th class="px-3 py-3 font-medium text-right">Exp. profit</th><th class="px-3 py-3 font-medium">Status</th></tr>
+        </thead>
+        <tbody id="tradeBody" class="divide-y divide-ink-700/60"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============================== EVENT LOG ============================== -->
+  <section>
+    <details class="group rounded-xl ring-1 ring-ink-700/80 bg-ink-900" id="logDetails">
+      <summary class="cursor-pointer list-none px-4 py-3 text-sm font-medium text-slate-400 hover:text-slate-200 flex items-center gap-2">
+        <svg class="h-4 w-4 transition group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7"/></svg>
+        Event log <span id="logLast" class="ml-2 truncate text-xs text-slate-600 font-normal"></span>
+      </summary>
+      <div id="logBody" class="max-h-72 overflow-y-auto border-t border-ink-700 px-4 py-3 num text-xs leading-relaxed space-y-0.5"></div>
+    </details>
+  </section>
+
+  <p id="footNote" class="pb-6 text-center text-xs text-slate-600">Always read both rulebooks before trading. Not financial advice.</p>
+</main>
+
+<!-- ============================== DRAWER ============================== -->
+<div id="scrim" class="scrim pointer-events-none fixed inset-0 z-40 bg-black/50 opacity-0"></div>
+<aside id="drawer" class="drawer fixed right-0 top-0 z-50 h-full w-full max-w-md translate-x-full overflow-y-auto bg-ink-900 ring-1 ring-ink-700 shadow-2xl">
+  <div class="flex items-center justify-between border-b border-ink-700 px-5 h-14">
+    <h3 class="font-semibold text-slate-100">Scanner controls</h3>
+    <button id="closeDrawer" class="rounded-md p-1.5 text-slate-400 hover:bg-ink-800 hover:text-white" aria-label="Close">
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="p-5 space-y-7">
+    <form id="settingsForm" class="space-y-4">
+      <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Thresholds</div>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block">
+          <span class="text-sm text-slate-300">Min annualized ROI</span>
+          <div class="mt-1 flex items-center rounded-lg bg-ink-950 ring-1 ring-ink-600 focus-within:ring-emerald-500/70">
+            <input name="min_annualized" type="number" step="0.5" min="0" class="w-full bg-transparent px-3 py-2 num text-slate-100 outline-none">
+            <span class="pr-3 text-slate-500">%</span>
+          </div>
+        </label>
+        <label class="block">
+          <span class="text-sm text-slate-300">Raw net ROI floor</span>
+          <div class="mt-1 flex items-center rounded-lg bg-ink-950 ring-1 ring-ink-600 focus-within:ring-emerald-500/70">
+            <input name="min_roi" type="number" step="0.05" min="0" max="100" class="w-full bg-transparent px-3 py-2 num text-slate-100 outline-none">
+            <span class="pr-3 text-slate-500">%</span>
+          </div>
+        </label>
+      </div>
+      <div class="-mt-2 text-[11px] leading-snug text-slate-500">Qualifies when net ROI × 365 / days to the later settlement ≥ the annualized target <b>and</b> net ROI ≥ the floor (keeps 1-day contracts with $0.02 spreads out). Both are after all fees, at the VWAP of the full fill.</div>
+      <label class="block">
+        <span class="text-sm text-slate-300">Minimum top-of-book liquidity (each leg)</span>
+        <div class="mt-1 flex items-center rounded-lg bg-ink-950 ring-1 ring-ink-600 focus-within:ring-emerald-500/70">
+          <span class="pl-3 text-slate-500">$</span>
+          <input name="min_liquidity" type="number" step="10" min="0" class="w-full bg-transparent px-2 py-2 num text-slate-100 outline-none">
+        </div>
+      </label>
+      <div class="pt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">Bulletproof checks</div>
+      <div class="grid grid-cols-3 gap-3">
+        <label class="block"><span class="text-xs text-slate-300">Max settle diff</span>
+          <div class="mt-1 flex items-center rounded-lg bg-ink-950 ring-1 ring-ink-600 focus-within:ring-emerald-500/70"><input name="max_settle_diff_days" type="number" step="0.5" min="0" class="w-full bg-transparent px-2 py-2 num text-slate-100 outline-none"><span class="pr-2 text-slate-500">d</span></div></label>
+        <label class="block"><span class="text-xs text-slate-300">Strict match</span>
+          <div class="mt-1 flex items-center rounded-lg bg-ink-950 ring-1 ring-ink-600 focus-within:ring-emerald-500/70"><input name="strict_match_confidence" type="number" step="1" min="0" max="100" class="w-full bg-transparent px-2 py-2 num text-slate-100 outline-none"><span class="pr-2 text-slate-500">%</span></div></label>
+        <label class="block"><span class="text-xs text-slate-300">Max lock-up</span>
+          <div class="mt-1 flex items-center rounded-lg bg-ink-950 ring-1 ring-ink-600 focus-within:ring-emerald-500/70"><input name="max_lockup_days" type="number" step="1" min="1" class="w-full bg-transparent px-2 py-2 num text-slate-100 outline-none"><span class="pr-2 text-slate-500">d</span></div></label>
+      </div>
+      <label class="flex items-center gap-2 text-sm text-slate-300"><input name="require_full_depth" type="checkbox" class="h-4 w-4 accent-emerald-500"> Require the full per-platform budget to fill at ≥ the ROI floor (VWAP)</label>
+      <div id="strictInfo" class="text-[11px] leading-snug text-slate-500"></div>
+      <div class="pt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">Polling cadence</div>
+      <label class="block">
+        <span class="text-sm text-slate-300">Price / orderbook poll</span>
+        <div class="mt-1 flex items-center rounded-lg bg-ink-950 ring-1 ring-ink-600 focus-within:ring-emerald-500/70">
+          <input name="interval" type="number" step="1" min="3" max="3600" class="w-full bg-transparent px-3 py-2 num text-slate-100 outline-none">
+          <span class="pr-3 text-slate-500">sec</span>
+        </div>
+        <span class="mt-1 block text-[11px] leading-snug text-slate-500">Minimum 3 s. Re-prices only already-matched pairs with batched calls (100 markets per request). 3 s works best for a focused set of active pairs; it backs off automatically if an API rate-limits.</span>
+      </label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block">
+          <span class="text-sm text-slate-300">Market list refresh</span>
+          <div class="mt-1 flex items-center rounded-lg bg-ink-950 ring-1 ring-ink-600 focus-within:ring-emerald-500/70">
+            <input name="catalog_interval" type="number" step="30" min="60" max="86400" class="w-full bg-transparent px-3 py-2 num text-slate-100 outline-none">
+            <span class="pr-3 text-slate-500">sec</span>
+          </div>
+          <span class="mt-1 block text-[11px] text-slate-500">min 60 s · full catalog download</span>
+        </label>
+        <label class="block">
+          <span class="text-sm text-slate-300">Claude matching</span>
+          <div class="mt-1 flex items-center rounded-lg bg-ink-950 ring-1 ring-ink-600 focus-within:ring-emerald-500/70">
+            <input name="match_interval" type="number" step="60" min="300" max="86400" class="w-full bg-transparent px-3 py-2 num text-slate-100 outline-none">
+            <span class="pr-3 text-slate-500">sec</span>
+          </div>
+          <span class="mt-1 block text-[11px] text-slate-500">min 300 s · uses Claude Pro usage</span>
+        </label>
+      </div>
+      <button type="submit" class="w-full rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-ink-950 hover:bg-emerald-400">Apply settings</button>
+    </form>
+
+    <div class="space-y-3">
+      <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Execution mode</div>
+      <div class="grid grid-cols-3 gap-1 rounded-lg bg-ink-950 p-1 ring-1 ring-ink-700" id="modeSeg">
+        <button data-mode="alert_only" class="rounded-md px-2 py-1.5 text-xs font-semibold">Alert only</button>
+        <button data-mode="dry_run" class="rounded-md px-2 py-1.5 text-xs font-semibold">Dry run</button>
+        <button data-mode="live_auto" class="rounded-md px-2 py-1.5 text-xs font-semibold">Live auto</button>
+      </div>
+      <div id="modeHelp" class="text-xs text-slate-500 leading-relaxed"></div>
+      <div id="execRules" class="rounded-lg bg-ink-950 ring-1 ring-ink-700 p-3 text-xs text-slate-400 leading-relaxed"></div>
+    </div>
+
+    <div class="space-y-3">
+      <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Matching</div>
+      <div class="rounded-lg bg-ink-950 ring-1 ring-ink-700 p-3 text-sm">
+        <div class="text-slate-400">Matcher: <span id="matcherStatus" class="text-slate-200"></span></div>
+        <div id="cliInfo" class="mt-1 text-xs text-slate-500 break-all"></div>
+        <div id="matcherError" class="mt-1 hidden text-xs text-rose-300"></div>
+        <div class="mt-1 text-xs text-slate-500" id="matchRefreshInfo"></div>
+        <div class="mt-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Coverage by category</div>
+        <div id="coverage" class="mt-1.5 space-y-1 text-xs"></div>
+      </div>
+      <button id="rematchBtn" class="w-full rounded-lg bg-ink-800 px-4 py-2 text-sm font-semibold text-slate-100 ring-1 ring-ink-600 hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed">Force re-match now</button>
+    </div>
+
+    <div class="space-y-2">
+      <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Alerts</div>
+      <div id="discordInfo" class="rounded-lg bg-ink-950 ring-1 ring-ink-700 p-3 text-sm"></div>
+    </div>
+
+    <div class="space-y-2">
+      <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Blocked pairs <span id="blockedCount" class="text-slate-600"></span></div>
+      <div id="blockedList" class="space-y-2"></div>
+    </div>
+  </div>
+</aside>
+
+<div id="toasts" class="fixed bottom-4 left-1/2 z-[60] -translate-x-1/2 space-y-2 w-[min(92vw,28rem)]"></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  let state = null, lastVersion = -1, clockOffset = 0, failures = 0;
+  const openRules = new Set();
+  let sort = { key: 'annualized_roi', dir: -1 };
+  let arbSort = { key: 'annualized_roi', dir: -1 };
+
+  // ---------- helpers ----------
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const safeUrl = (u) => /^https:\/\/(kalshi\.com|polymarket\.com)\//.test(u || '') ? u : '#';
+  const usd = (v, d = 2) => (v == null || isNaN(v)) ? '—' : '$' + Number(v).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+  const cents = (p, d = 1) => (p == null || !p) ? '—' : (p * 100).toFixed(d) + '¢';
+  const pct = (v, d = 2, sign = false) => (v == null || isNaN(v)) ? '—' : (sign && v > 0 ? '+' : '') + Number(v).toFixed(d) + '%';
+  const short = (s) => s && s.length > 22 ? s.slice(0, 10) + '…' + s.slice(-6) : (s || '');
+  // 3-second updates: write a section only if its HTML changed, so hover, focus, clicks, text selection,
+  // sort order and scroll position survive every poll.
+  const lastHTML = new WeakMap();
+  const setHTML = (el, html) => { if (el && lastHTML.get(el) !== html) { el.innerHTML = html; lastHTML.set(el, html); } };
+  const setText = (el, txt) => { if (el && el.textContent !== txt) el.textContent = txt; };
+  const fmtDur = (sec) => { sec = Math.round(sec); return sec < 90 ? sec + 's' : sec < 5400 ? Math.round(sec / 60) + 'm' : (sec / 3600).toFixed(1) + 'h'; };
+  const ago = (t) => { if (!t) return '—'; const s = Math.max(0, Math.round(Date.now() / 1000 + clockOffset - t)); return s < 60 ? s + 's ago' : Math.floor(s / 60) + 'm ' + (s % 60) + 's ago'; };
+
+  async function api(path, body) {
+    const opts = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+    const r = await fetch(path, opts);
+    if (!r.ok) { let msg = r.status + ''; try { msg = (await r.json()).detail || msg; } catch (_) { /* non-JSON error body */ } throw new Error(msg); }
+    return r.json();
+  }
+
+  function toast(msg, opts = {}) {
+    const el = document.createElement('div');
+    el.className = 'flex items-center gap-3 rounded-lg bg-ink-800 px-4 py-3 text-sm text-slate-100 shadow-xl ring-1 ' + (opts.error ? 'ring-rose-500/40' : 'ring-ink-600');
+    el.innerHTML = `<span class="flex-1">${esc(msg)}</span>`;
+    if (opts.action) {
+      const b = document.createElement('button');
+      b.className = 'font-semibold text-emerald-300 hover:text-emerald-200';
+      b.textContent = opts.action.label;
+      b.onclick = () => { opts.action.fn(); el.remove(); };
+      el.appendChild(b);
+    }
+    $('toasts').appendChild(el);
+    setTimeout(() => el.remove(), opts.ms || 5000);
+  }
+
+  const innerDesc = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
+  ['haltBar', 'acctKalshi', 'acctPoly', 'acctExec', 'tradeBody', 'arbList', 'nearBody', 'cliInfo',
+   'discordInfo', 'blockedList', 'logBody', 'coverage'].forEach((id) => {
+    const el = $(id);
+    if (!el) return;
+    Object.defineProperty(el, 'innerHTML', {
+      get() { return innerDesc.get.call(el); },
+      set(v) { if (lastHTML.get(el) !== v) { innerDesc.set.call(el, v); lastHTML.set(el, v); } },
+    });
+  });
+
+  // ---------- polling ----------
+  async function poll() {
+    try {
+      const s = await api('/api/state');
+      failures = 0; $('connBadge').classList.add('hidden');
+      apply(s);
+    } catch (err) {
+      failures++;
+      if (failures > 2) $('connBadge').classList.remove('hidden');
+      console.warn('[Dashboard] state poll failed', err);
+    }
+  }
+
+  function apply(s, force) {
+    state = s;
+    clockOffset = s.server_time - Date.now() / 1000;
+    if (force || s.version !== lastVersion) { lastVersion = s.version; render(); }
+    renderClock();
+  }
+
+  // ---------- render ----------
+  function render() {
+    const s = state;
+    $('modeBadge').classList.toggle('hidden', !s.settings.mock);
+    $('pauseBtn').textContent = s.paused ? 'Resume' : 'Pause';
+    $('pauseBtn').className = 'rounded-lg px-3 py-1.5 text-sm font-medium ring-1 ' +
+      (s.paused ? 'bg-emerald-500 text-ink-950 ring-emerald-400 hover:bg-emerald-400' : 'text-slate-300 ring-ink-600 hover:bg-ink-800 hover:text-white');
+
+    const tone = s.status === 'Paused' ? ['bg-slate-500/15 text-slate-300 ring-slate-500/30', 'bg-slate-400']
+      : s.status === 'Scanning' ? ['bg-emerald-500/15 text-emerald-300 ring-emerald-500/30', 'bg-emerald-400']
+      : ['bg-sky-500/15 text-sky-300 ring-sky-500/30', 'bg-sky-400'];
+    $('statusBadge').className = 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ' + tone[0];
+    $('statusDot').className = 'h-1.5 w-1.5 rounded-full ' + tone[1] + (s.status === 'Paused' ? '' : ' pulse-dot');
+    $('statusText').textContent = s.status;
+
+    $('kpiPairs').textContent = s.matched_pairs.toLocaleString();
+    $('kpiPairsSub').textContent = `${s.priced_pairs} priced · ${(s.categories || []).length} categories · ${s.kalshi_count.toLocaleString()} Kalshi / ${s.poly_count.toLocaleString()} Poly markets`;
+    $('kpiArbs').textContent = s.arbs.length;
+    $('kpiArbs').className = 'mt-1.5 num text-3xl font-semibold ' + (s.arbs.length ? 'text-emerald-300' : 'text-slate-100');
+    $('kpiArbsCard').className = 'rounded-xl p-4 ring-1 ' + (s.arbs.length ? 'bg-emerald-500/[.07] ring-emerald-500/40' : 'bg-ink-900 ring-ink-700/80');
+    const best = s.arbs.length ? Math.max(...s.arbs.map(a => a.roi_pct)) : null;
+    const profitableWatch = s.near.filter(r => r.econ_arb).length;
+    const bestAnn = s.arbs.length ? Math.max(...s.arbs.map(a => a.annualized_roi ?? -1e9)) : null;
+    setText($('strictCriteria'), `Qualifies at annualized ROI ≥ ${pct(s.settings.min_annualized, 1)} and net ROI ≥ ${pct(s.settings.min_roi, 2)} (VWAP of the full fill, both platforms' fees), rules ≥ ${s.settings.strict_match_confidence}% identical, settle dates ≤ ${s.settings.max_settle_diff_days}d apart, lock-up ≤ ${s.settings.max_lockup_days}d${s.settings.require_full_depth ? ', full depth' : ''}. Sorted by annualized ROI.`);
+    $('kpiArbsSub').textContent = (s.arbs.length ? `best ${annPct(bestAnn)} ann. · ` : `≥ ${pct(s.settings.min_annualized, 1)} ann. · `) +
+      `${profitableWatch} profitable on watchlist · ${s.strict_queue ? s.strict_queue + ' awaiting rule check · ' : ''}${s.alerts_sent} alerts`;
+    const cap = $('capital');
+    if (document.activeElement !== cap && !cap.dataset.pending) cap.value = s.settings.max_per_platform;
+
+    const eb = $('errorBar');
+    const errs = [s.error, s.matcher_alert].filter(Boolean);
+    eb.classList.toggle('hidden', !errs.length); eb.textContent = errs.join(' · ');
+
+    renderExec(); renderArbs(); renderNear(); renderTrades(); renderDrawer(); renderLog();
+  }
+
+  // ---------- execution ----------
+  const MODE = {
+    alert_only: { label: 'Alert only', cls: 'bg-slate-500/15 text-slate-300 ring-slate-500/30', help: 'Finds and sizes arbs inside the caps and alerts you. Never touches an order endpoint.' },
+    dry_run: { label: 'Dry run', cls: 'bg-sky-500/15 text-sky-300 ring-sky-500/40', help: 'Runs the full execution path (fresh books, sizing, balance checks, signed payloads) but sends nothing. Simulated fills count against the caps.' },
+    live_auto: { label: 'Live auto', cls: 'bg-rose-500/20 text-rose-200 ring-rose-500/50', help: 'Places real orders on both platforms when every safety check passes. Starts disarmed: press Enable auto-trade.' },
+  };
+  const ACCT = {
+    ready: ['text-emerald-300', '● Connected'], unconfigured: ['text-slate-400', '○ Read-only / unconfigured'],
+    unsupported: ['text-amber-300', '▲ Unsupported here'], blocked: ['text-rose-300', '⛔ Region blocked'], error: ['text-rose-300', '✕ Error'],
+  };
+
+  function acctHtml(name, accent, v, mock) {
+    const st = ACCT[v.status] || ['text-slate-400', v.status];
+    const usedPct = v.cap > 0 ? Math.min(100, (v.deployed / v.cap) * 100) : 0;
+    const geo = v.geo_blocked ? `<div class="mt-2 rounded-md bg-rose-500/10 px-2 py-1.5 text-[11px] text-rose-200 ring-1 ring-rose-500/30">Polymarket reports new orders are not allowed from your region (${esc(v.geo_country)}). Live execution on Polymarket stays disabled.</div>` : '';
+    return `
+      <div class="flex items-center justify-between"><span class="text-xs font-semibold uppercase tracking-wider ${accent}">${name}</span><span class="text-xs font-medium ${st[0]}">${st[1]}</span></div>
+      <div class="mt-2 flex items-baseline gap-2"><span class="num text-2xl font-semibold text-slate-100">${v.balance == null ? '—' : usd(v.balance)}</span><span class="text-xs text-slate-500">${v.balance == null ? 'balance unavailable' : (mock ? 'mock cash' : 'cash balance')}</span></div>
+      <div class="mt-3 flex justify-between text-xs text-slate-400"><span>Deployed ${state.execution.mode === 'dry_run' ? '(real + simulated)' : '(open positions)'}</span><span class="num text-slate-200">${usd(v.deployed)} / ${usd(v.cap)}</span></div>
+      <div class="mt-1 h-1.5 rounded-full bg-ink-700 overflow-hidden"><div class="h-full ${usedPct >= 100 ? 'bg-rose-400' : 'bg-cyan-400'}" style="width:${usedPct.toFixed(1)}%"></div></div>
+      <div class="mt-2 text-xs text-slate-400">Available for next leg <span class="num text-slate-100 font-semibold">${usd(v.available)}</span> <span class="text-slate-600">(${v.limited_by === 'balance' ? 'limited by balance' : 'limited by cap'})</span></div>
+      <div class="mt-2 text-[11px] text-slate-500 leading-snug">${esc(v.detail)}</div>${geo}`;
+  }
+
+  function renderExec() {
+    const x = state.execution, m = MODE[x.mode] || MODE.alert_only;
+    $('execBadge').className = 'rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wider ring-1 ' + m.cls;
+    $('execBadge').textContent = m.label + (x.mode !== 'alert_only' && x.halted ? ' · halted' : '');
+    const armed = x.mode !== 'alert_only' && !x.halted;
+    $('estopBtn').classList.toggle('hidden', !armed);
+    $('armBtn').classList.toggle('hidden', !(x.mode !== 'alert_only' && x.halted));
+    $('armBtn').textContent = x.mode === 'live_auto' ? 'Enable auto-trade' : 'Resume dry run';
+    const hb = $('haltBar');
+    hb.classList.toggle('hidden', !(x.mode !== 'alert_only' && x.halted));
+    hb.innerHTML = `<b>${x.mode === 'live_auto' ? 'Auto-trade is OFF' : 'Dry run paused'}.</b> ${esc(x.halt_reason)}`;
+    $('acctKalshi').innerHTML = acctHtml('Kalshi', 'text-cyan-300', x.kalshi, state.settings.mock);
+    $('acctPoly').innerHTML = acctHtml('Polymarket', 'text-violet-300', x.poly, state.settings.mock);
+    const live = x.trades.filter(t => !t.simulated), sim = x.trades.filter(t => t.simulated);
+    $('acctExec').innerHTML = `
+      <div class="flex items-center justify-between"><span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Execution</span><span class="rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase ring-1 ${m.cls}">${m.label}</span></div>
+      <div class="mt-2 text-sm ${armed ? (x.mode === 'live_auto' ? 'text-rose-200' : 'text-sky-200') : 'text-slate-300'}">${x.mode === 'alert_only' ? 'Alerts only, no orders.' : armed ? (x.mode === 'live_auto' ? '● ARMED: placing real orders' : '● Simulating trades') : '○ Halted'}${x.busy ? ' · <span class="pulse-dot inline-block">executing…</span>' : ''}</div>
+      <dl class="mt-3 grid grid-cols-2 gap-y-1.5 text-xs">
+        <dt class="text-slate-500">Min annualized ROI</dt><dd class="num text-right text-slate-200">${pct(x.min_annualized, 1)}</dd>
+        <dt class="text-slate-500">Net ROI floor</dt><dd class="num text-right text-slate-200">${pct(x.min_roi, 2)}</dd>
+        <dt class="text-slate-500">Cap per platform</dt><dd class="num text-right text-slate-200">${usd(x.cap)}</dd>
+        <dt class="text-slate-500">Pair approval</dt><dd class="text-right text-slate-200">${x.require_approval ? 'required' : 'not required'}</dd>
+        <dt class="text-slate-500">Min match confidence</dt><dd class="num text-right text-slate-200">${Math.round(x.min_confidence * 100)}%</dd>
+        <dt class="text-slate-500">Trades</dt><dd class="num text-right text-slate-200">${live.length} live · ${sim.length} sim</dd>
+      </dl>`;
+    $('footNote').textContent = x.mode === 'live_auto' ? 'LIVE mode: this tool places real orders. Leg risk, settlement-rule differences and platform eligibility are your responsibility. Not financial advice.'
+      : 'No real orders are sent in this mode. Always read both rulebooks before trading. Not financial advice.';
+  }
+
+  const CAT_COLORS = { Sports: 'text-sky-300 ring-sky-500/30', Politics: 'text-orange-300 ring-orange-500/30',
+    Elections: 'text-orange-300 ring-orange-500/30', Entertainment: 'text-pink-300 ring-pink-500/30', Mentions: 'text-pink-300 ring-pink-500/30',
+    Economics: 'text-emerald-300 ring-emerald-500/30', Financials: 'text-emerald-300 ring-emerald-500/30', Crypto: 'text-amber-300 ring-amber-500/30',
+    'Science and Technology': 'text-cyan-300 ring-cyan-500/30', Companies: 'text-cyan-300 ring-cyan-500/30' };
+  const catChip = (c) => `<span class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ring-1 ${CAT_COLORS[c] || 'text-violet-300 ring-violet-500/30'}">${esc(c || 'Other')}</span>`;
+  const RISK = { high: 'bg-rose-500/15 text-rose-200 ring-rose-500/40', medium: 'bg-amber-400/10 text-amber-200 ring-amber-400/30', info: 'bg-ink-800 text-slate-400 ring-ink-600' };
+  function riskChips(tags, compact) {
+    if (!tags || !tags.length) return '';
+    const shown = compact ? tags.filter(t => t.level !== 'info').slice(0, 3) : tags;
+    if (!shown.length) return '';
+    return `<div class="mt-1.5 flex flex-wrap gap-1">${shown.map(t => `<span class="rounded px-1.5 py-0.5 text-[10px] font-medium ring-1 ${RISK[t.level] || RISK.info}" title="${esc(t.detail)}">${t.level === 'high' ? '⚠ ' : ''}${esc(t.label)}</span>`).join('')}</div>`;
+  }
+
+  function strictChips(a) {
+    const c = a.strict_checks || {}, v = a.strict || {};
+    const items = [
+      ['Annualized', `${annPct(a.annualized_roi)} (net ${pct(a.roi_pct, 2)} at VWAP)`],
+      ['Rules', v.confidence != null ? `${Math.round(v.confidence)}% identical (${esc(v.model || '')})` : '—'],
+      ['Settle Δ', c.settle_diff_days != null ? `${c.settle_diff_days}d` : '—'],
+      ['Lock-up', c.lockup_days != null ? `${c.lockup_days}d` : '—'],
+      ['Depth', 'full budget fills'],
+    ];
+    return `<div class="mt-2 flex flex-wrap gap-1">${items.map(([k, val]) => `<span class="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] text-emerald-200 ring-1 ring-emerald-500/30">✓ ${k}: ${val}</span>`).join('')}</div>`;
+  }
+
+  function approveBtn(a) {
+    if (!state.execution.require_approval) return '';
+    return a.approved
+      ? `<button data-act="unapprove" data-ticker="${esc(a.kalshi_ticker)}" class="rounded-md bg-emerald-500/15 px-2.5 py-1.5 font-medium text-emerald-300 ring-1 ring-emerald-500/40 hover:bg-emerald-500/25" title="Click to revoke">✓ Approved for auto-trade</button>`
+      : `<button data-act="approve" data-ticker="${esc(a.kalshi_ticker)}" data-title="${esc(a.event)}" class="rounded-md px-2.5 py-1.5 font-medium text-slate-200 ring-1 ring-ink-600 hover:bg-ink-800">Approve for auto-trade</button>`;
+  }
+
+  function execLine(a) {
+    const x = state.execution;
+    if (x.mode === 'alert_only') return '';
+    const ok = !a.exec_status;
+    return `<div class="mt-2 text-xs ${ok ? (x.mode === 'live_auto' ? 'text-rose-200' : 'text-sky-300') : 'text-slate-500'}">${ok ? (x.mode === 'live_auto' ? '● Eligible: will be executed on the next scan' : '● Eligible: will be simulated on the next scan') : 'Not executing: ' + esc(a.exec_status)}</div>`;
+  }
+
+  const TSTAT = {
+    filled: 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30', simulated: 'bg-sky-500/15 text-sky-300 ring-sky-500/30',
+    flattened: 'bg-amber-500/15 text-amber-300 ring-amber-500/30', aborted: 'bg-slate-500/15 text-slate-300 ring-slate-500/30',
+    unhedged: 'bg-rose-600/30 text-rose-100 ring-rose-400', unknown: 'bg-rose-600/30 text-rose-100 ring-rose-400', partial: 'bg-rose-500/20 text-rose-200 ring-rose-500/40',
+  };
+  function renderTrades() {
+    const T = state.execution.trades;
+    $('tradeCount').textContent = T.length ? `(${T.length})` : '';
+    $('resetSimBtn').classList.toggle('hidden', !T.some(t => t.simulated));
+    if (!T.length) { $('tradeBody').innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">No trades yet${state.execution.mode === 'alert_only' ? ' (alert_only mode never trades)' : ''}.</td></tr>`; return; }
+    $('tradeBody').innerHTML = T.map((t) => {
+      const k = t.kalshi || {}, p = t.poly || {};
+      return `<tr class="hover:bg-ink-850 align-top">
+        <td class="px-4 py-2.5 whitespace-nowrap text-xs text-slate-400 num">${new Date(t.ts * 1000).toLocaleString()}<div class="text-slate-600">${t.simulated ? 'SIM' : 'LIVE'} · ${esc(t.id)}</div></td>
+        <td class="px-3 py-2.5 max-w-[18rem]"><div class="truncate text-slate-200" title="${esc(t.event)}">${esc(t.event)}</div><div class="text-xs text-slate-500 truncate" title="${esc(t.note)}">${esc(t.note)}</div></td>
+        <td class="px-3 py-2.5 text-xs num whitespace-nowrap text-slate-300">${esc(k.outcome)} ×${k.filled || 0}<div class="text-slate-500">≤ ${cents(k.limit, 0)} · ${usd(k.exposure)}</div></td>
+        <td class="px-3 py-2.5 text-xs num whitespace-nowrap text-slate-300">${esc(p.outcome)} ×${(p.shares || 0).toFixed(2)}<div class="text-slate-500">≤ ${cents(p.max_price, 1)} · ${usd(p.exposure)}</div></td>
+        <td class="px-3 py-2.5 text-right num text-slate-200">${usd(t.expected_profit)}<div class="text-xs text-slate-500">${pct(t.expected_roi_pct)}</div></td>
+        <td class="px-3 py-2.5"><span class="rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase ring-1 ${TSTAT[t.status] || TSTAT.aborted}">${esc(t.status)}</span>${t.settled ? '<div class="mt-1 text-[11px] text-slate-500">settled</div>' : ''}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderClock() {
+    if (!state) return;
+    const now = Date.now() / 1000 + clockOffset;
+    let txt = '—';
+    if (state.paused) txt = 'paused';
+    else if (state.next_scan_at) { const r = Math.max(0, Math.ceil(state.next_scan_at - now)); txt = r === 0 ? 'polling…' : r + 's'; }
+    else if (state.scan_no || state.matching) txt = 'polling…';
+    $('countdown').textContent = txt;
+    $('lastScan').textContent = state.last_scan_at ? `Pass #${state.scan_no} · ${ago(state.last_scan_at)} · took ${state.last_scan_secs}s${state.price_overruns ? ' · ' + state.price_overruns + ' slow' : ''}` : (state.catalog_refreshing ? 'Loading markets…' : ' ');
+    const s = state;
+    setText($('cadence'), `every ${s.settings.interval}s${s.backoff > 1 ? ' ×' + s.backoff : ''} · catalog ${s.catalog_refreshing ? 'refreshing…' : s.next_catalog_at ? 'in ' + fmtDur(Math.max(0, s.next_catalog_at - now)) : '—'} · match ${s.matching ? 'running…' : s.next_match_at ? 'in ' + fmtDur(Math.max(0, s.next_match_at - now)) : 'after catalog'}`);
+    const tn = $('throttleNote'); tn.classList.toggle('hidden', !s.throttle_note); setText(tn, s.throttle_note || '');
+  }
+
+  function legHtml(name, accent, leg, actionHtml, price, url, linkLabel) {  // actionHtml must be pre-escaped
+    if (!leg) return '';
+    return `
+      <div class="rounded-lg bg-ink-950/70 ring-1 ring-ink-700 p-3.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wider ${accent}">${name}</span>
+          <a href="${esc(safeUrl(url))}" target="_blank" rel="noopener noreferrer" class="text-xs font-medium text-slate-400 hover:text-white">${linkLabel} ↗</a>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="rounded-md bg-ink-800 px-2 py-0.5 text-sm font-semibold text-slate-100 ring-1 ring-ink-600">BUY ${actionHtml}</span>
+          <span class="text-sm text-slate-400">× <span class="num text-slate-200">${leg.contracts}</span></span>
+        </div>
+        <dl class="mt-3 grid grid-cols-3 gap-2 text-xs">
+          <div><dt class="text-slate-500">Limit price</dt><dd class="num text-sm text-slate-100">${price}</dd></div>
+          <div><dt class="text-slate-500">Stake</dt><dd class="num text-sm font-semibold text-slate-100">${usd(leg.stake)}</dd></div>
+          <div><dt class="text-slate-500">Top liquidity</dt><dd class="num text-sm text-slate-100">${usd(leg.top_liquidity_usd, 0)}</dd></div>
+        </dl>
+        <div class="mt-2 text-[11px] text-slate-500 num">VWAP ${cents(leg.avg_price, 2)} · fee ${usd(leg.fee, leg.fee < 0.01 ? 4 : 2)}</div>
+      </div>`;
+  }
+
+  function renderArbs() {
+    const list = $('arbList');
+    const arbs = sortRows(state.arbs, arbSort);
+    renderArbSort();
+    if (!arbs.length) {
+      list.innerHTML = `<div class="rounded-xl border border-dashed border-ink-700 px-6 py-10 text-center">
+        <div class="text-slate-300 font-medium">No bulletproof arbitrage right now</div>
+        <div class="mt-1 text-sm text-slate-500">${state.matched_pairs ? `Watching ${state.matched_pairs} matched pairs. The closest spreads are below.` : 'Waiting for the matcher to verify pairs…'}</div></div>`;
+      return;
+    }
+    list.innerHTML = arbs.map((a) => {
+      const k = a.kalshi, p = a.poly, open = openRules.has(a.key);
+      const polyAction = esc(p.label) + (/^(yes|no)$/i.test(p.label) ? '' : ` <span class="text-slate-500 font-normal">(${p.side === 'YES' ? '= Kalshi YES' : '= Kalshi NO'})</span>`);
+      const ring = a.risk_level === 'high' ? 'ring-rose-500/60' : 'ring-emerald-500/40';
+      return `
+      <article class="rounded-xl bg-gradient-to-b from-emerald-500/[.08] to-ink-900 ring-1 ${ring} p-4 sm:p-5" data-key="${esc(a.key)}">
+        <div class="flex flex-wrap items-start gap-x-4 gap-y-2">
+          <div class="min-w-0 flex-1">
+            <div class="mb-1 flex flex-wrap items-center gap-1.5">${catChip(a.category)}${a.risk_level === 'high' ? '<span class="rounded bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-200 ring-1 ring-rose-500/50">Rule risk: high</span>' : ''}</div>
+            <h3 class="font-semibold text-slate-50 leading-snug">${esc(a.event)}</h3>
+            <p class="mt-0.5 text-xs text-slate-500 truncate">Polymarket: ${esc(a.poly_question)}</p>
+            ${riskChips(a.risk_tags, false)}
+            ${strictChips(a)}
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-right">
+              <div class="num text-2xl font-semibold text-emerald-300">${pct(a.roi_pct)}</div>
+              <div class="text-[11px] uppercase tracking-wider text-slate-500">net ROI</div>
+            </div>
+            <div class="h-10 w-px bg-ink-700 mx-1"></div>
+            <div class="text-right" title="Simple annualized: net ROI × 365 / days until the later settlement date">
+              <div class="num text-2xl font-semibold ${a.annualized_roi == null ? 'text-slate-500' : 'text-cyan-200'}">${annPct(a.annualized_roi)}</div>
+              <div class="text-[11px] uppercase tracking-wider text-slate-500">annualized · ${lockLabel(a)}</div>
+            </div>
+            <div class="h-10 w-px bg-ink-700 mx-1"></div>
+            <div class="text-right">
+              <div class="num text-2xl font-semibold text-slate-50">${usd(a.profit)}</div>
+              <div class="text-[11px] uppercase tracking-wider text-slate-500">guaranteed</div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 grid gap-3 md:grid-cols-2">
+          ${legHtml('Leg 1 · Kalshi', 'text-cyan-300', k, esc(k.side), cents(k.limit_price, 0), a.kalshi_url, 'Open on Kalshi')}
+          ${legHtml('Leg 2 · Polymarket', 'text-violet-300', p, polyAction, cents(p.limit_price, 1), a.poly_url, 'Open on Polymarket')}
+        </div>
+        <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          <span class="num text-slate-400">${usd(a.total_cost)} in → <span class="text-slate-200">${usd(a.payout)}</span> back either way · ${a.contracts} contracts each${a.sizing_note ? ` <span class="text-slate-500">· limited by ${esc(a.sizing_note)}</span>` : ''}</span>
+          <span class="ml-auto"></span>
+          <button data-act="rules" data-key="${esc(a.key)}" class="inline-flex items-center gap-1.5 rounded-md bg-amber-400/10 px-2.5 py-1.5 font-medium text-amber-300 ring-1 ring-amber-400/30 hover:bg-amber-400/20">
+            ⚠ Verify rulebooks <span class="text-amber-300/60">· match ${Math.round(a.confidence * 100)}%</span>
+          </button>
+          ${approveBtn(a)}
+          <button data-act="block" data-ticker="${esc(a.kalshi_ticker)}" data-title="${esc(a.event)}" class="rounded-md px-2.5 py-1.5 font-medium text-rose-300 ring-1 ring-rose-500/40 hover:bg-rose-500/15">Block pair</button>
+        </div>
+        ${execLine(a)}
+        <div class="${open ? '' : 'hidden'} mt-3 grid gap-3 md:grid-cols-2 text-xs leading-relaxed" data-rules="${esc(a.key)}">
+          <div class="rounded-lg bg-ink-950/70 p-3 ring-1 ring-ink-700"><div class="mb-1 font-semibold text-cyan-300">Kalshi rules <span class="font-normal text-slate-500">· settles ${esc((a.kalshi_close || '').slice(0, 10))}</span></div><div class="text-slate-300">${esc(a.kalshi_rules) || '—'}</div></div>
+          <div class="rounded-lg bg-ink-950/70 p-3 ring-1 ring-ink-700"><div class="mb-1 font-semibold text-violet-300">Polymarket rules <span class="font-normal text-slate-500">· ends ${esc((a.poly_end || '').slice(0, 10))}</span></div><div class="text-slate-300">${esc(a.poly_rules) || '—'}</div></div>
+          <div class="md:col-span-2 text-slate-500">Claude's reasoning: <span class="text-slate-300">${esc(a.match_reason) || '—'}</span> · Kalshi <span class="num">${esc(a.kalshi_ticker)}</span> · Polymarket <span class="num">${esc(short(a.condition_id))}</span></div>
+        </div>
+      </article>`;
+    }).join('');
+  }
+
+  // nulls (unknown settlement date) always sort last, whichever direction
+  function sortRows(list, s) {
+    return (list || []).slice().sort((a, b) => {
+      const x = a[s.key], y = b[s.key];
+      if (x == null && y == null) return 0;
+      if (x == null) return 1; if (y == null) return -1;
+      return (typeof x === 'string' ? x.localeCompare(y) : x - y) * s.dir;
+    });
+  }
+  const annPct = (v) => v == null ? '—' : (v > 0 ? '+' : '') + (Math.abs(v) >= 1000 ? Math.round(v).toLocaleString() : Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(1)) + '%';
+  const lockLabel = (r) => r.days_to_settle == null ? 'no date' : r.days_to_settle >= 730 ? (r.days_to_settle / 365).toFixed(1) + 'y lock' : r.days_to_settle + 'd lock';
+  function renderArbSort() {
+    document.querySelectorAll('#arbSort [data-arbsort]').forEach((b) => {
+      const on = b.dataset.arbsort === arbSort.key;
+      const label = b.textContent.replace(/[ ▲▼]+$/, '');
+      b.textContent = label + (on ? (arbSort.dir > 0 ? ' ▲' : ' ▼') : '');
+      b.className = 'rounded-md px-2 py-1 font-medium ring-1 ' + (on ? 'bg-emerald-500/15 text-emerald-200 ring-emerald-500/40' : 'text-slate-400 ring-ink-600 hover:bg-ink-800 hover:text-white');
+    });
+  }
+
+  function renderNear() {
+    const rows = sortRows(state.near, sort);
+    $('watchCount').textContent = `top ${state.near.length} by net ROI`;
+    const k = sort.key, d = sort.dir;
+    document.querySelectorAll('th[data-sort]').forEach((th) => {
+      const base = th.textContent.replace(/[ ▲▼]+$/, '');
+      th.textContent = base + (th.dataset.sort === k ? (d > 0 ? ' ▲' : ' ▼') : '');
+    });
+    if (!rows.length) {
+      $('nearBody').innerHTML = `<tr><td colspan="9" class="px-4 py-8 text-center text-slate-500">No near-arbs yet.</td></tr>`;
+      return;
+    }
+    $('nearBody').innerHTML = rows.map((r) => {
+      const n = r.net_roi, good = n != null && n > 0;
+      return `<tr class="hover:bg-ink-850">
+        <td class="px-4 py-2.5 max-w-[22rem]">
+          <div class="truncate text-slate-200" title="${esc(r.event)}">${esc(r.event)}</div>
+          <div class="truncate text-xs text-slate-500" title="${esc(r.poly_question)}">${esc(r.poly_question)}</div>
+          ${riskChips(r.risk_tags, true)}
+        </td>
+        <td class="px-3 py-2.5 whitespace-nowrap">${catChip(r.category)}</td>
+        <td class="px-3 py-2.5 text-right whitespace-nowrap"><a href="${esc(safeUrl(r.kalshi_url))}" target="_blank" rel="noopener noreferrer" class="hover:text-white"><span class="text-xs text-slate-500">${esc(r.kalshi_side)}</span> <span class="num text-slate-200">${cents(r.kalshi_top_price, 0)}</span></a></td>
+        <td class="px-3 py-2.5 text-right whitespace-nowrap"><a href="${esc(safeUrl(r.poly_url))}" target="_blank" rel="noopener noreferrer" class="hover:text-white"><span class="text-xs text-slate-500">${esc(r.poly_outcome)}</span> <span class="num text-slate-200">${cents(r.poly_top_price, 1)}</span></a></td>
+        <td class="px-3 py-2.5 text-right num text-slate-200">${r.cost_per_dollar == null ? '—' : (r.cost_per_dollar * 100).toFixed(2) + '¢'}</td>
+        <td class="px-3 py-2.5 text-right num font-semibold ${good ? 'text-emerald-300' : 'text-rose-300'}">${pct(n, 2, true)}</td>
+        <td class="px-3 py-2.5 text-right num whitespace-nowrap"><div class="${r.annualized_roi == null ? 'text-slate-500' : r.annualized_roi > 0 ? 'text-cyan-200' : 'text-rose-300/80'}">${annPct(r.annualized_roi)}</div><div class="text-[11px] text-slate-500">${lockLabel(r)}</div></td>
+        <td class="px-3 py-2.5 text-xs text-slate-400 min-w-[15rem] max-w-[22rem]">${r.econ_arb ? '<span class="mr-1 rounded bg-amber-400/15 px-1 py-px text-[10px] font-bold text-amber-300 ring-1 ring-amber-400/30">ARB</span>' : ''}${(r.strict_reasons || [r.reject_reason]).map(x => `<div class="leading-snug ${/^(Settle|Match|Rules|Rule mismatch|Lock-up)/.test(x) ? 'text-rose-200/80' : /^(Thin|VWAP)/.test(x) ? 'text-amber-200/80' : ''}">• ${esc(x)}</div>`).join('')}</td>
+        <td class="px-3 py-2.5 text-right"><button data-act="block" data-ticker="${esc(r.kalshi_ticker)}" data-title="${esc(r.event)}" class="rounded px-2 py-1 text-xs text-slate-500 hover:bg-rose-500/15 hover:text-rose-300" title="Block this pair (mismatched rules)">Block</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderDrawer() {
+    const s = state, f = $('settingsForm');
+    if (!f.dataset.dirty) {
+      f.min_roi.value = +s.settings.min_roi.toFixed(2);
+      f.min_annualized.value = +s.settings.min_annualized.toFixed(2);
+      f.min_liquidity.value = s.settings.min_liquidity;
+      f.interval.value = s.settings.interval;
+      f.catalog_interval.value = s.settings.catalog_interval;
+      f.match_interval.value = s.settings.match_interval;
+      f.max_settle_diff_days.value = s.settings.max_settle_diff_days;
+      f.strict_match_confidence.value = s.settings.strict_match_confidence;
+      f.max_lockup_days.value = s.settings.max_lockup_days;
+      f.require_full_depth.checked = !!s.settings.require_full_depth;
+    }
+    $('matcherStatus').textContent = s.matcher_status || '—';
+    $('strictInfo').textContent = `Strict rule checks run on profitable pairs only, comparing both full rulebooks with Claude (${s.settings.strict_verify_model}): ${s.strict_queue} queued, ${s.strict_calls_left} checks left this hour. Verdicts are cached until the rules change.`;
+    const c = s.claude_cli;
+    $('cliInfo').innerHTML = s.matcher_offline ? 'Mock mode: canned answers, Claude CLI not used'
+      : !c ? 'Claude CLI: checking…'
+      : !c.path ? '<span class="text-rose-300">Claude CLI not found</span>'
+      : `Claude CLI ${esc(c.version)} · ${esc(c.source)} · ${c.logged_in ? `<span class="text-emerald-300">logged in${c.plan ? ' (' + esc(c.plan) + ')' : ''}</span>` : c.logged_in === false ? '<span class="text-rose-300">NOT logged in</span>' : 'login status unknown'}<div class="text-slate-600" title="${esc(c.path)}">${esc(c.path)}</div>`;
+    const me = $('matcherError'); me.classList.toggle('hidden', !s.matcher_error); me.textContent = s.matcher_error || '';
+    $('matchRefreshInfo').textContent = `Claude matching every ${fmtDur(s.settings.match_interval)}${s.next_match_at && !s.matching ? ' (next in ' + fmtDur(Math.max(0, s.next_match_at - s.server_time)) + ')' : ''} · market lists every ${fmtDur(s.settings.catalog_interval)}` +
+      (s.settings.mock ? (s.settings.live_matcher ? ' · mock data, real Claude CLI' : ' · mock data, canned Claude answers') : ' · Claude CLI (Haiku)');
+    const rb = $('rematchBtn'); rb.disabled = s.matching; rb.textContent = s.matching ? 'Matching in progress…' : 'Force re-match now';
+    $('discordInfo').innerHTML = s.settings.discord
+      ? `<span class="text-emerald-300">● Discord webhook active</span><div class="mt-1 text-xs text-slate-500">New confirmed arbs post automatically (10-min cooldown per pair).</div>`
+      : `<span class="text-slate-400">○ Discord not configured</span><div class="mt-1 text-xs text-slate-500">Set <code class="text-slate-300">DISCORD_WEBHOOK_URL</code> in <code class="text-slate-300">.env</code> and restart.</div>`;
+    const x = s.execution;
+    document.querySelectorAll('#modeSeg [data-mode]').forEach((b) => {
+      const on = b.dataset.mode === x.mode;
+      b.className = 'rounded-md px-2 py-1.5 text-xs font-semibold ' + (on ? (b.dataset.mode === 'live_auto' ? 'bg-rose-600 text-white' : b.dataset.mode === 'dry_run' ? 'bg-sky-500 text-ink-950' : 'bg-slate-200 text-ink-950') : 'text-slate-400 hover:bg-ink-800 hover:text-white');
+    });
+    $('modeHelp').textContent = (MODE[x.mode] || MODE.alert_only).help;
+    $('execRules').innerHTML = `Executes only bulletproof pairs: <b class="text-slate-200">annualized ROI ≥ ${pct(x.min_annualized, 1)} and net ROI ≥ ${pct(x.min_roi, 2)}</b> after all fees, both top-of-book ≥ ${usd(s.settings.min_liquidity, 0)}, each leg within ${usd(x.cap)} and the live balance, match confidence ≥ ${Math.round(x.min_confidence * 100)}%${x.require_approval ? ', and you approved the pair' : ''}. Books are re-fetched and re-priced just before sending. Kalshi leg 1 is fill-or-kill. If Polymarket leg 2 fails, leg 1 is sold back at once; anything left unhedged halts auto-trade.`;
+    const cats = s.categories || [], mix = s.last_round_mix || {};
+    const maxN = Math.max(1, ...cats.map(c => c.matched));
+    $('coverage').innerHTML = cats.length ? cats.map(c => `<div class="flex items-center gap-2"><span class="w-36 truncate text-slate-300">${esc(c.category)}</span><div class="h-1.5 flex-1 rounded bg-ink-700"><div class="h-full rounded bg-cyan-400/70" style="width:${(c.matched / maxN * 100).toFixed(1)}%"></div></div><span class="num w-20 text-right text-slate-400">${c.matched} / ${c.priced}</span></div>`).join('')
+      + `<div class="pt-1 text-[11px] text-slate-500">matched / priced pairs.${Object.keys(mix).length ? ' Last Claude round checked: ' + Object.entries(mix).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${esc(k)} ${v}`).join(', ') + '.' : ''}</div>`
+      : '<div class="text-slate-500">No matched pairs yet.</div>';
+    $('blockedCount').textContent = s.blocked.length ? `(${s.blocked.length})` : '';
+    $('blockedList').innerHTML = s.blocked.length ? s.blocked.map((b) => `
+      <div class="flex items-start gap-3 rounded-lg bg-ink-950 ring-1 ring-ink-700 p-3">
+        <div class="min-w-0 flex-1 text-xs"><div class="truncate text-slate-200">${esc(b.kalshi_title || b.kalshi_ticker)}</div><div class="truncate text-slate-500">${esc(b.poly_question || '')}</div></div>
+        <button data-act="unblock" data-ticker="${esc(b.kalshi_ticker)}" class="shrink-0 rounded px-2 py-1 text-xs font-medium text-emerald-300 ring-1 ring-emerald-500/30 hover:bg-emerald-500/15">Unblock</button>
+      </div>`).join('') : `<div class="text-sm text-slate-500">None. Blocked pairs are saved in matches_cache.json and never re-checked.</div>`;
+  }
+
+  function renderLog() {
+    const L = state.log || [];
+    const color = { ERROR: 'text-rose-300', CRITICAL: 'text-rose-300', WARNING: 'text-amber-300' };
+    $('logBody').innerHTML = L.slice().reverse().map((r) =>
+      `<div class="${color[r.level] || 'text-slate-400'}"><span class="text-slate-600">${new Date(r.t * 1000).toLocaleTimeString()}</span> ${esc(r.msg)}</div>`).join('') || '<div class="text-slate-600">—</div>';
+    $('logLast').textContent = L.length ? L[L.length - 1].msg : '';
+  }
+
+  // ---------- actions ----------
+  async function post(path, body, okMsg) {
+    try { const s = await api(path, body); apply(s, true); if (okMsg) toast(okMsg); return true; }
+    catch (err) { console.error('[Dashboard] ' + path + ' failed', err); toast(err.message || 'Request failed', { error: true }); return false; }
+  }
+
+  async function block(ticker, title) {
+    if (await post('/api/pairs/block', { kalshi_ticker: ticker })) {
+      toast(`Blocked: ${title}`, { action: { label: 'Undo', fn: () => post('/api/pairs/unblock', { kalshi_ticker: ticker }, 'Pair restored; it reappears on the next poll') }, ms: 8000 });
+    }
+  }
+
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    const act = b.dataset.act;
+    if (act === 'block') block(b.dataset.ticker, b.dataset.title);
+    else if (act === 'approve') {
+      if (confirm(`Approve this pair for automated trading?\n\n${b.dataset.title}\n\nOnly approve after reading BOTH platforms' resolution rules (⚠ Verify rulebooks). The approval is tied to this exact Polymarket market.`))
+        post('/api/pairs/approve', { kalshi_ticker: b.dataset.ticker }, 'Pair approved for auto-trade');
+    }
+    else if (act === 'unapprove') post('/api/pairs/unapprove', { kalshi_ticker: b.dataset.ticker }, 'Approval revoked');
+    else if (act === 'unblock') post('/api/pairs/unblock', { kalshi_ticker: b.dataset.ticker }, 'Pair unblocked; it reappears on the next poll');
+    else if (act === 'rules') {
+      const key = b.dataset.key, panel = document.querySelector(`[data-rules="${CSS.escape(key)}"]`);
+      if (openRules.has(key)) openRules.delete(key); else openRules.add(key);
+      panel && panel.classList.toggle('hidden', !openRules.has(key));
+    }
+  });
+
+  document.querySelectorAll('#arbSort [data-arbsort]').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.arbsort;
+    // first click: best first (ROI/profit high, lock-up short); clicking again flips the direction
+    arbSort = { key: k, dir: arbSort.key === k ? -arbSort.dir : (k === 'days_to_settle' ? 1 : -1) };
+    if (state) renderArbs();
+  }));
+
+  document.querySelectorAll('th[data-sort]').forEach((th) => th.addEventListener('click', () => {
+    const k = th.dataset.sort;
+    sort = { key: k, dir: sort.key === k ? -sort.dir : (k === 'event' || k === 'reject_reason' || k === 'category' ? 1 : -1) };
+    renderNear();
+  }));
+
+  // capital: debounced live recalculation server-side (pure re-pricing of cached books, no network)
+  let capTimer = null;
+  $('capital').addEventListener('input', (e) => {
+    const v = parseFloat(e.target.value);
+    clearTimeout(capTimer);
+    if (!(v >= 0)) { $('capitalHint').textContent = 'Enter an amount of $0 or more'; return; }
+    e.target.dataset.pending = '1';
+    $('capitalHint').textContent = 'Recalculating…';
+    capTimer = setTimeout(async () => {
+      if (await post('/api/settings', { max_per_platform: v })) {
+        $('capitalHint').textContent = `Each side capped at ${usd(v, 2)}`;
+        document.querySelectorAll('#arbList article').forEach((a) => a.classList.add('flash'));
+      }
+      delete e.target.dataset.pending;
+    }, 250);
+  });
+
+  const form = $('settingsForm');
+  form.addEventListener('input', () => { form.dataset.dirty = '1'; });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = { min_roi: parseFloat(form.min_roi.value), min_annualized: parseFloat(form.min_annualized.value), min_liquidity: parseFloat(form.min_liquidity.value), interval: parseFloat(form.interval.value),
+                   catalog_interval: parseFloat(form.catalog_interval.value), match_interval: parseFloat(form.match_interval.value),
+                   max_settle_diff_days: parseFloat(form.max_settle_diff_days.value), strict_match_confidence: parseFloat(form.strict_match_confidence.value),
+                   max_lockup_days: parseFloat(form.max_lockup_days.value) };
+    const fullDepth = form.require_full_depth.checked;
+    const floors = { interval: 3, catalog_interval: 60, match_interval: 300 };
+    for (const [k, min] of Object.entries(floors)) if (body[k] < min) { toast(`${k.replace('_', ' ')} must be at least ${min} s`, { error: true }); return; }
+    for (const [k, v] of Object.entries(body)) if (isNaN(v)) { toast(`Invalid ${k.replace('_', ' ')}`, { error: true }); return; }
+    delete form.dataset.dirty;
+    await post('/api/settings', { ...body, require_full_depth: fullDepth }, 'Settings applied and all pairs re-priced');
+  });
+
+  $('rematchBtn').addEventListener('click', () => post('/api/rematch', {}, 'Re-match started in the background'));
+  $('estopBtn').addEventListener('click', () => post('/api/execution/halt', { reason: 'Emergency stop pressed on the dashboard' }, 'Auto-trade halted. No new orders will be sent.'));
+  $('armBtn').addEventListener('click', () => {
+    const live = state && state.execution.mode === 'live_auto';
+    if (live && !confirm('Enable LIVE auto-trading?\n\nReal orders will be placed on Kalshi and Polymarket whenever an approved pair passes every safety check, up to the per-platform cap.')) return;
+    post('/api/execution/resume', {}, live ? 'Auto-trade ARMED' : 'Dry run resumed');
+  });
+  $('resetSimBtn').addEventListener('click', () => { if (confirm('Delete all simulated (dry-run) trades and free their simulated exposure?')) post('/api/execution/reset_simulation', {}, 'Simulated trades cleared'); });
+  document.querySelectorAll('#modeSeg [data-mode]').forEach((b) => b.addEventListener('click', () => {
+    const mode = b.dataset.mode;
+    if (!state || mode === state.execution.mode) return;
+    let body = { mode };
+    if (mode === 'live_auto') {
+      const typed = prompt('Switch to LIVE auto-trading?\n\nType LIVE to confirm. The mode starts disarmed; you then press "Enable auto-trade".');
+      if (typed !== 'LIVE') { toast('Live mode not enabled', { error: true }); return; }
+      body.confirm = 'LIVE';
+    }
+    post('/api/execution/mode', body, `Execution mode: ${MODE[mode].label}`);
+  }));
+  $('pauseBtn').addEventListener('click', () => post('/api/pause', { paused: !(state && state.paused) }));
+
+  const drawer = $('drawer'), scrim = $('scrim');
+  const setDrawer = (open) => {
+    drawer.classList.toggle('translate-x-full', !open);
+    scrim.classList.toggle('opacity-0', !open); scrim.classList.toggle('pointer-events-none', !open);
+  };
+  $('openDrawer').onclick = () => setDrawer(true);
+  $('closeDrawer').onclick = () => setDrawer(false);
+  scrim.onclick = () => setDrawer(false);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setDrawer(false); });
+
+  poll();
+  setInterval(poll, 1000);
+  setInterval(renderClock, 250);
+})();
+</script>
+</body>
+</html>

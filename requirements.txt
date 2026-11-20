@@ -1,0 +1,9 @@
+httpx>=0.27,<1.0
+python-dotenv>=1.0
+fastapi>=0.110
+uvicorn[standard]>=0.29
+# Kalshi request signing (Ed25519 / RSA-PSS). Only used when KALSHI_API_KEY_ID is set.
+cryptography>=42
+# Polymarket order placement needs Polymarket's official SDK, which requires Python 3.11+:
+#   pip install polymarket-client
+# It is optional: without it, Polymarket stays read-only and the dashboard says why.

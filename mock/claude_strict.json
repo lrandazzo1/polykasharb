@@ -1,0 +1,43 @@
+[
+  {
+    "id": "KXFEDDECISION-26DEC-H0",
+    "identical": true,
+    "confidence": 99,
+    "checks": {
+      "proposition": "pass",
+      "outcome_alignment": "pass",
+      "resolution_source": "pass",
+      "deadline": "pass",
+      "edge_cases": "pass"
+    },
+    "issues": []
+  },
+  {
+    "id": "KXNBAGAME-26NOV20LALBOS-LAL",
+    "identical": true,
+    "confidence": 99,
+    "checks": {
+      "proposition": "pass",
+      "outcome_alignment": "pass",
+      "resolution_source": "pass",
+      "deadline": "pass",
+      "edge_cases": "pass"
+    },
+    "issues": []
+  },
+  {
+    "id": "KXSWIFTKELCE-26",
+    "identical": false,
+    "confidence": 93,
+    "checks": {
+      "proposition": "pass",
+      "outcome_alignment": "pass",
+      "resolution_source": "fail",
+      "deadline": "pass",
+      "edge_cases": "pass"
+    },
+    "issues": [
+      "Polymarket needs official confirmation; Kalshi accepts credible media reports"
+    ]
+  }
+]
