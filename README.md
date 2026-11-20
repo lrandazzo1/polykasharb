@@ -427,6 +427,34 @@ At 6% annualized over 30 days the required net ROI is 0.49%, i.e. an all-in cost
 of guaranteed payout; over 90 days it is 1.48% (≤ $0.985). Polymarket changes its
 fee coefficients from time to time (next change Nov 20, 2026); `feeSchedule` is re-read every refresh.
 
+### Break-even and MMF hurdle (deterministic, shown on every row)
+
+Both numbers come only from order-book prices, fees and lock-up days. Nothing is derived from Claude's
+match confidence or any guessed probability.
+
+```
+cost_per_$1      = all-in VWAP cost of both legs + fees / payout     (top of book when nothing sizes)
+break_even_prob  = cost_per_$1 × 100                                 e.g. 97.3% req
+mmf_hurdle_prob  = cost_per_$1 × (1 + MMF_BENCHMARK_RATE × days / 365) × 100   (default 4.5%)
+```
+
+`break_even_prob` is the share of outcomes in which the position must collect $1 to get its money back.
+For a true arbitrage (identical rules, same settlement) the pair always collects $1, so anything below
+100% is the locked-in edge. For a Watchlist date-offset spread, the gap between 100% and the MMF hurdle
+is how much "both legs lose" probability you can tolerate before a money-market fund would have done better.
+
+### Date-offset favorite check (settle dates more than MAX_SETTLE_DIFF_DAYS apart)
+
+The heavy favorite is the higher-priced leg (sized VWAP when there is a fill, else top of book).
+
+- **Favorite settles early (+Xd):** the expensive, likely-to-pay leg settles first, frees capital early,
+  and only the cheap leg trails through the gap. Lower tail risk.
+- **Warning: Favorite settles late (−Xd):** the cheap leg settles first, and the expensive leg stays
+  exposed through the whole gap window. Elevated tail risk.
+
+This is a Watchlist label only. It never makes a pair bulletproof: the strict gate still requires
+settle dates ≤ `MAX_SETTLE_DIFF_DAYS` apart.
+
 ## Risks this tool cannot remove
 
 * **Leg risk.** Books move between the scan and the order. Fill-or-kill orders, the pre-trade

@@ -12,7 +12,7 @@ import time
 from collections import Counter
 from typing import Any, Dict, List, Optional
 
-from arb_engine import ArbEngine
+from arb_engine import ArbEngine, break_even_prob, favorite_offset, mmf_hurdle_prob
 from config import PRICE_POLL_MIN, ROOT, Settings
 from execution import ExecutionManager, Ledger
 from http_utils import make_client, throttle_count
@@ -616,6 +616,7 @@ class ScannerService:
                 "max_per_platform": self.s.max_per_platform,
                 "min_roi": self.s.min_roi_pct,
                 "min_annualized": self.s.min_annualized_roi_pct,
+                "mmf_rate": self.s.mmf_rate_pct,
                 "min_liquidity": self.s.min_liquidity_usd,
                 "interval": self.s.interval,
                 "catalog_interval": self.s.catalog_interval,
@@ -678,6 +679,13 @@ class ScannerService:
         pm = self.poly.get(o.pair.poly_condition_id)
         eff = o.effective_cost if o.contracts else o.top_effective_cost
         tags = risk_tags(km, pm, o.pair, time.time()) if km and pm else []
+        lock = self._lockup(o, km, pm, eff)
+        cpd = eff if math.isfinite(eff) else None
+        # leg prices for the favorite check: the sized VWAP when there is a fill, else top of book
+        k_px = o.kalshi.avg_price if o.kalshi and o.contracts else o.kalshi_top_price
+        p_px = o.poly.avg_price if o.poly and o.contracts else o.poly_top_price
+        offset = favorite_offset(k_px, p_px, _ts((km.expected_expiration or km.close_time) if km else ""),
+                                 _ts(pm.end_date if pm else ""), self.s.max_settle_diff_days)
         return {
             "key": o.key,
             "kalshi_ticker": o.pair.kalshi_ticker,
@@ -697,7 +705,11 @@ class ScannerService:
             # net ROI after fees, the same measure the threshold uses: sized ROI for arbs, top-of-book otherwise
             "net_roi": round(o.roi_pct if o.contracts else ((1 / eff - 1) * 100 if math.isfinite(eff) and eff > 0 else -100), 4),
             "category": (km.category if km else "") or "Other",
-            **self._lockup(o, km, pm, eff),
+            **lock,
+            # deterministic hurdles from prices, fees and lock-up only
+            "break_even_prob": break_even_prob(cpd),
+            "mmf_hurdle_prob": mmf_hurdle_prob(cpd, lock["days_to_settle"], self.s.mmf_rate_pct),
+            "offset_favorite": offset,
             "risk_tags": tags,
             "risk_level": risk_level(tags),
             "kalshi_side": o.kalshi_side,

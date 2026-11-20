@@ -59,6 +59,8 @@ class Settings:
     # Per opportunity this is one required net ROI: max(MIN_NET_ROI, MIN_ANNUALIZED_ROI × days / 365).
     min_annualized_roi_pct: float = field(default_factory=lambda: _env_float("MIN_ANNUALIZED_ROI", 6.0))
     min_roi_pct: float = field(default_factory=lambda: _env_float("MIN_NET_ROI_PCT", _env_float("MIN_NET_ROI", 0.35)))
+    # Risk-free benchmark for the MMF hurdle win rate (annual %, simple interest over the lock-up)
+    mmf_rate_pct: float = field(default_factory=lambda: _env_float("MMF_BENCHMARK_RATE", 4.5))
     min_liquidity_usd: float = field(default_factory=lambda: _env_float("MIN_TOP_LIQUIDITY_USD", 50))
     alert_cooldown: float = field(default_factory=lambda: _env_float("ALERT_COOLDOWN_SECONDS", 600))
     near_arb_count: int = field(default_factory=lambda: _env_int("WATCHLIST_COUNT", 25))

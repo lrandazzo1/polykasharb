@@ -78,6 +78,62 @@ def lockup_days(km: KalshiMarket, pm: PolyMarket, now: Optional[float] = None) -
 
 
 # ---------------------------------------------------------------------------
+# Deterministic hurdle math (orderbook prices, fees and lock-up only: no probability guessing)
+# ---------------------------------------------------------------------------
+def break_even_prob(cost_per_dollar: Optional[float]) -> Optional[float]:
+    """Win rate (%) at which the position breaks even: all-in VWAP cost + fees per $1 of payout × 100.
+
+    For a pair that settles identically this is the probability that the pair pays $1 at all, so a
+    pure arb sits below 100% and its spread under 100% is the guaranteed edge. For a date-offset
+    spread it is the share of worlds in which you must collect $1 to get your money back.
+    """
+    if cost_per_dollar is None or not math.isfinite(cost_per_dollar) or cost_per_dollar <= 0:
+        return None
+    return round(cost_per_dollar * 100.0, 3)
+
+
+def mmf_hurdle_prob(cost_per_dollar: Optional[float], days: Optional[int], mmf_rate_pct: float = 4.5) -> Optional[float]:
+    """Win rate (%) needed to beat a risk-free money-market fund over the lock-up:
+    cost_per_dollar × (1 + rate × days / 365) × 100 (simple interest, like the annualized ROI)."""
+    be = break_even_prob(cost_per_dollar)
+    if be is None or days is None:
+        return None
+    return round(be * (1.0 + mmf_rate_pct / 100.0 * days / 365.0), 3)
+
+
+def favorite_offset(k_price: float, p_price: float, k_settle: Optional[float], p_settle: Optional[float],
+                    min_gap_days: float = 1.0) -> Optional[Dict[str, object]]:
+    """Leg ordering when the two settlement dates differ by more than `min_gap_days`.
+
+    The heavy favorite is the higher-priced leg. If it settles FIRST, the likely payout arrives early and
+    only the cheap leg trails (lower tail risk). If the cheap leg settles first, the expensive leg stays
+    exposed through the whole gap window (elevated tail risk). Purely from prices and dates.
+    """
+    if k_settle is None or p_settle is None or not k_price or not p_price:
+        return None
+    gap = abs(k_settle - p_settle) / 86400.0
+    if gap <= min_gap_days + 1e-9:
+        return None
+    if abs(k_price - p_price) < 1e-9:
+        return {"status": "even", "gap_days": round(gap, 1), "favorite": "", "favorite_price": k_price,
+                "label": f"No favorite: both legs at {k_price * 100:.0f}¢ ({gap:.0f}d offset)"}
+    fav, fav_price, cheap_price = (("Kalshi", k_price, p_price) if k_price > p_price else ("Polymarket", p_price, k_price))
+    fav_ts, cheap_ts = (k_settle, p_settle) if fav == "Kalshi" else (p_settle, k_settle)
+    early = fav_ts < cheap_ts
+    d = round(gap)
+    return {
+        "status": "early" if early else "late",
+        "gap_days": round(gap, 1),
+        "favorite": fav,
+        "favorite_price": round(fav_price, 4),
+        "cheap_price": round(cheap_price, 4),
+        "label": (f"Favorite settles early (+{d}d): {fav} {fav_price * 100:.0f}¢ pays first" if early else
+                  f"Warning: Favorite settles late (-{d}d): {fav} {fav_price * 100:.0f}¢ exposed after the "
+                  f"{cheap_price * 100:.0f}¢ leg settles"),
+    }
+
+
+# ---------------------------------------------------------------------------
 class ArbEngine:
     def __init__(self, settings: Settings):
         self.s = settings
