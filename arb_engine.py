@@ -109,11 +109,14 @@ def favorite_offset(k_price: float, p_price: float, k_settle: Optional[float], p
     only the cheap leg trails (lower tail risk). If the cheap leg settles first, the expensive leg stays
     exposed through the whole gap window (elevated tail risk). Purely from prices and dates.
     """
-    if k_settle is None or p_settle is None or not k_price or not p_price:
+    if k_settle is None or p_settle is None:
         return None
     gap = abs(k_settle - p_settle) / 86400.0
     if gap <= min_gap_days + 1e-9:
         return None
+    if not k_price or not p_price:  # a date gap but no ask on one side: say so instead of hiding it
+        return {"status": "unknown", "gap_days": round(gap, 1), "favorite": "", "favorite_price": None,
+                "label": f"Favorite unknown: no ask on {'Kalshi' if not k_price else 'Polymarket'} ({gap:.0f}d offset)"}
     if abs(k_price - p_price) < 1e-9:
         return {"status": "even", "gap_days": round(gap, 1), "favorite": "", "favorite_price": k_price,
                 "label": f"No favorite: both legs at {k_price * 100:.0f}¢ ({gap:.0f}d offset)"}

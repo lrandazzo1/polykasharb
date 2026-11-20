@@ -580,6 +580,8 @@ class ScannerService:
     def snapshot(self) -> Dict[str, Any]:
         return {
             "version": self.version,
+            # lets the dashboard tell a stale scanner process (old Python still running) from missing data
+            "features": ["break_even", "offset_favorite"],
             "server_time": time.time(),
             "status": self.status,
             "matcher_status": self.matcher.status,
@@ -724,7 +726,7 @@ class ScannerService:
             "match_reason": o.pair.reason,
             "kalshi_rules": (km.rules if km else "")[:600],
             "poly_rules": (pm.description if pm else "")[:600],
-            "kalshi_close": km.expected_expiration if km else "",
+            "kalshi_close": (km.expected_expiration or km.close_time) if km else "",
             "poly_end": pm.end_date if pm else "",
             "poly_fee_rate": pm.fee_rate if pm else 0,
             "sizing_note": o.sizing_note,

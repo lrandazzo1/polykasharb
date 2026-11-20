@@ -607,8 +607,8 @@
             </div>
             <div class="h-10 w-px bg-ink-700 mx-1"></div>
             <div class="text-right" title="Break-even win rate = all-in VWAP cost + fees per $1 payout. MMF hurdle = win rate needed to beat ${mmfRate()}% risk-free over the lock-up">
-              <div class="num text-2xl font-semibold text-slate-200">${bePct(a.break_even_prob)}</div>
-              <div class="text-[11px] uppercase tracking-wider text-slate-500">break-even req · MMF ${bePct(a.mmf_hurdle_prob)}</div>
+              <div class="num text-2xl font-semibold text-slate-200">${bePct(hurdles(a).be)}</div>
+              <div class="text-[11px] uppercase tracking-wider text-slate-500">break-even req · MMF ${bePct(hurdles(a).mmf)}</div>
             </div>
             <div class="h-10 w-px bg-ink-700 mx-1"></div>
             <div class="text-right">
@@ -643,7 +643,8 @@
   // nulls (unknown settlement date) always sort last, whichever direction
   function sortRows(list, s) {
     return (list || []).slice().sort((a, b) => {
-      const x = a[s.key], y = b[s.key];
+      const v = (r) => s.key === 'break_even_prob' ? hurdles(r).be : r[s.key];
+      const x = v(a), y = v(b);
       if (x == null && y == null) return 0;
       if (x == null) return 1; if (y == null) return -1;
       return (typeof x === 'string' ? x.localeCompare(y) : x - y) * s.dir;
@@ -654,14 +655,42 @@
   // deterministic hurdles: straight from VWAP cost, fees and lock-up days (never from match confidence)
   const mmfRate = () => (state && state.settings && state.settings.mmf_rate != null ? state.settings.mmf_rate : 4.5);
   const bePct = (v) => v == null ? '—' : v.toFixed(1) + '%';
+  // Server values first; if the running scanner predates these fields, derive the same numbers here from
+  // cost_per_dollar (all-in VWAP cost + fees per $1) and days_to_settle, both of which it already sends.
+  const backendHas = (f) => !!(state && Array.isArray(state.features) && state.features.includes(f));
+  function hurdles(r) {
+    let be = r.break_even_prob, mmf = r.mmf_hurdle_prob;
+    const c = r.cost_per_dollar;
+    if (be == null && c != null && isFinite(c) && c > 0) be = c * 100;
+    if (mmf == null && be != null && r.days_to_settle != null) mmf = be * (1 + mmfRate() / 100 * r.days_to_settle / 365);
+    return { be, mmf };
+  }
+  function offsetOf(r) {
+    if (backendHas('offset_favorite') && 'offset_favorite' in r) return r.offset_favorite;
+    const kd = Date.parse(r.kalshi_close), pd = Date.parse(r.poly_end);
+    if (isNaN(kd) || isNaN(pd)) return null;
+    const gap = Math.abs(kd - pd) / 864e5, maxd = (state.settings && state.settings.max_settle_diff_days) ?? 1;
+    if (gap <= maxd + 1e-9) return null;
+    const kp = r.kalshi && r.contracts ? r.kalshi.avg_price : r.kalshi_top_price;
+    const pp = r.poly && r.contracts ? r.poly.avg_price : r.poly_top_price;
+    const d = Math.round(gap), c = (x) => Math.round(x * 100) + '¢';
+    if (!kp || !pp) return { status: 'unknown', gap_days: +gap.toFixed(1), label: `Favorite unknown: no ask on ${!kp ? 'Kalshi' : 'Polymarket'} (${d}d offset)` };
+    if (Math.abs(kp - pp) < 1e-9) return { status: 'even', gap_days: +gap.toFixed(1), label: `No favorite: both legs at ${c(kp)} (${d}d offset)` };
+    const kFav = kp > pp, fav = kFav ? 'Kalshi' : 'Polymarket', fp = kFav ? kp : pp, cp = kFav ? pp : kp;
+    const early = kFav ? kd < pd : pd < kd;
+    return { status: early ? 'early' : 'late', gap_days: +gap.toFixed(1),
+      label: early ? `Favorite settles early (+${d}d): ${fav} ${c(fp)} pays first`
+        : `Warning: Favorite settles late (-${d}d): ${fav} ${c(fp)} exposed after the ${c(cp)} leg settles` };
+  }
   function beCell(r) {
-    if (r.break_even_prob == null) return '<span class="text-slate-500">—</span>';
-    const tone = r.break_even_prob < 100 ? 'text-slate-200' : 'text-rose-300/90';
-    return `<div class="${tone}">${bePct(r.break_even_prob)} <span class="text-[11px] text-slate-500">req</span></div>`
-      + `<div class="text-[11px] text-slate-500" title="Win rate needed to beat a ${mmfRate()}% money-market fund over ${r.days_to_settle == null ? 'the lock-up' : r.days_to_settle + ' days'}">MMF hurdle: ${bePct(r.mmf_hurdle_prob)}</div>`;
+    const h = hurdles(r);
+    if (h.be == null) return '<span class="text-slate-500" title="No ask on one side: nothing to price">—</span>';
+    const tone = h.be < 100 ? 'text-slate-200' : 'text-rose-300/90';
+    return `<div class="${tone}">${bePct(h.be)} <span class="text-[11px] text-slate-500">req</span></div>`
+      + `<div class="text-[11px] text-slate-500" title="Win rate needed to beat a ${mmfRate()}% money-market fund over ${r.days_to_settle == null ? 'the lock-up' : r.days_to_settle + ' days'}">MMF hurdle: ${h.mmf == null ? 'n/a (no date)' : bePct(h.mmf)}</div>`;
   }
   function offsetBadge(r) {
-    const o = r.offset_favorite;
+    const o = offsetOf(r);
     if (!o) return '';
     const cls = o.status === 'early' ? 'bg-emerald-500/15 text-emerald-200 ring-emerald-500/40'
       : o.status === 'late' ? 'bg-rose-500/15 text-rose-200 ring-rose-500/40' : 'bg-slate-500/15 text-slate-300 ring-slate-500/40';
@@ -678,7 +707,8 @@
 
   function renderNear() {
     const rows = sortRows(state.near, sort);
-    $('watchCount').textContent = `top ${state.near.length} by net ROI`;
+    $('watchCount').textContent = `top ${state.near.length} by net ROI` + (backendHas('break_even') ? ''
+      : ' · scanner process is older than this page: restart it (Stop_Scanner.bat, then Launch_Scanner.bat)');
     const k = sort.key, d = sort.dir;
     document.querySelectorAll('th[data-sort]').forEach((th) => {
       const base = th.textContent.replace(/[ ▲▼]+$/, '');
